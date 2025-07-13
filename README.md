@@ -1,1 +1,2 @@
-# agentic-notes
+# project-planing-agent
+Public
