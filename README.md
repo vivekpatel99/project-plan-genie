@@ -1,2 +1,2 @@
-# project-plan-genie
-Public
+# project-planning-genie
+

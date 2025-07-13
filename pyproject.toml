@@ -1,0 +1,73 @@
+[project]
+name = "project-planning-genie"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "jupyterlab>=4.4.4",
+    "langchain>=0.3.26",
+    "langchain-cli>=0.0.36",
+    "langchain-community>=0.3.27",
+    "langchain-core>=0.3.68",
+    "langchain-openai>=0.3.27",
+    "langchain-perplexity>=0.1.1",
+    "langgraph>=0.5.2",
+    "langgraph-checkpoint-sqlite>=2.0.10",
+    "langgraph-cli[inmem]>=0.1.54",
+    "langgraph-prebuilt>=0.5.2",
+    "langgraph-sdk>=0.1.72",
+    "langsmith>=0.4.5",
+    "notebook>=7.4.4",
+    "tavily-python>=0.7.9",
+    "trustcall>=0.0.39",
+    "wikipedia>=1.4.0",
+]
+
+[project.optional-dependencies]
+dev = ["mypy", "ruff"]
+
+[tool.setuptools]
+packages = ["langgraph.templates.agent", "agent"]
+
+[tool.setuptools.package-dir]
+# This maps package names to the directories where their source code is located.
+# This is particularly useful for projects with a `src` layout.
+"langgraph.templates.agent" = "src/agent"
+"agent" = "src/agent"
+
+[tool.setuptools.package-data]
+# This section specifies non-Python files that should be included in the package.
+
+# The `py.typed` file is a marker file (defined in PEP 561) that tells type checkers
+# that your package contains type annotations and should be checked.
+# `"*"` means it applies to all packages defined.
+"*" = ["py.typed"]
+
+[tool.ruff]
+lint.select = [
+    "E",    # pycodestyle
+    "F",    # pyflakes
+    "I",    # isort
+    "D",    # pydocstyle
+    "D401", # First line should be in imperative mood
+    "T201", # Forbids `print` statements, encouraging logging instead.
+    "UP",   # pyupgrade (suggests modern Python syntax)
+]
+lint.ignore = [
+    "UP006",
+    "UP007",
+    # We actually do want to import from typing_extensions
+    "UP035",
+    # Relax the convention by _not_ requiring documentation for every function parameter.
+    "D417", # "Missing argument descriptions in the docstring"
+    "E501", # Line too long (handled by formatter, but good to have for linting)
+]
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["D", "UP"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[dependency-groups]
+dev = ["anyio", "langgraph-cli[inmem]", "mypy", "pytest", "ruff"]
