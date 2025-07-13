@@ -1,2 +1,2 @@
-# project-planing-agent
+# project-planning-agent
 Public
