@@ -40,7 +40,8 @@
     "**/.mypy_cache": true,
     "**/.pytest_cache": true,
     "**/node_modules": true,
-    ".python-version":true
+    ".python-version":true,
+    "**.langgraph_api": true
   },
   // Notebook settings
   "notebook.output.scrolling": true,
@@ -50,4 +51,5 @@
   "notebook.codeActionsOnSave": {
     "source.organizeImports": true
   },
+
 }

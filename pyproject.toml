@@ -12,6 +12,7 @@ dependencies = [
     "langchain-core>=0.3.68",
     "langchain-openai>=0.3.27",
     "langchain-perplexity>=0.1.1",
+    "langchain-tavily>=0.2.7",
     "langgraph>=0.5.2",
     "langgraph-checkpoint-sqlite>=2.0.10",
     "langgraph-cli[inmem]>=0.1.54",
