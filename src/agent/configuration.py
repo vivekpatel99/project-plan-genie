@@ -1,7 +1,11 @@
-from typing import TypedDict
+from dataclasses import dataclass, field, fields
+from typing import Annotated, Optional
+
+from langchain_core.runnables import RunnableConfig, ensure_config
 
 
-class Configuration(TypedDict):
+@dataclass(kw_only=True)
+class Configuration:
     """Configurable parameters for the agent.
 
     Set these when creating assistants OR when invoking the graph.

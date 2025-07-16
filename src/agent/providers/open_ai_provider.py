@@ -2,11 +2,15 @@
 
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_openai import ChatOpenAI
-from providers import LLMProvider
+
+from .base_class import LLMProvider
 
 
 class OpenAIProvider(LLMProvider):
-    """Concrete LLM provider for OpenAI models."""
+    """Concrete LLM provider for OpenAI models.
+
+    more details: https://python.langchain.com/docs/integrations/providers/openai/
+    """
 
     def __init__(
         self, model_name: str = "gpt-4o", temperature: float = 0.0, **kwargs
