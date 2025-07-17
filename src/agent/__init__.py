@@ -4,9 +4,10 @@ This module defines a custom graph.
 """
 
 from . import prompts, providers
+from .configuration import Configuration
+from .states import PlanningState, SearchQuery
 
 # from .info_gethering_agent import graph
-from .states import PlanningState, SearchQuery
 
 __all__ = [
     "info_gethering_agent",
@@ -14,4 +15,5 @@ __all__ = [
     "prompts",
     "PlanningState",
     "SearchQuery",
+    "Configuration",
 ]
