@@ -37,7 +37,7 @@ class Configuration(BaseModel):
                 "type": "text",
                 "default": "openai:gpt-4.1",
                 "description": "Model for conducting research. NOTE: Make sure your Researcher Model supports the selected search API.",
-            }
+            },
         },
     )
     research_model_max_tokens: int = Field(
@@ -47,7 +47,7 @@ class Configuration(BaseModel):
                 "type": "number",
                 "default": 10000,
                 "description": "Maximum output tokens for research model",
-            }
+            },
         },
     )
     # --- Compression Model ---
@@ -58,7 +58,7 @@ class Configuration(BaseModel):
                 "type": "text",
                 "default": Defaults.COMPRESSION_MODEL.value,
                 "description": "Model for compressing research findings from sub-agents. NOTE: Make sure your Compression Model supports the selected search API.",
-            }
+            },
         },
     )
     compression_model_max_tokens: int = Field(
@@ -68,7 +68,7 @@ class Configuration(BaseModel):
                 "type": "number",
                 "default": 8192,
                 "description": "Maximum output tokens for compression model",
-            }
+            },
         },
     )
     max_structured_output_retries: int = Field(
@@ -80,7 +80,7 @@ class Configuration(BaseModel):
                 "min": 1,
                 "max": 10,
                 "description": "Maximum number of retries for structured output calls from models",
-            }
+            },
         },
     )
     allow_clarification: bool = Field(
@@ -90,10 +90,10 @@ class Configuration(BaseModel):
                 "type": "boolean",
                 "default": True,
                 "description": "Whether to allow the researcher to ask the user clarifying questions before starting research",
-            }
+            },
         },
     )
-    max_concurrent_research_unit: int = Field(
+    max_concurrent_research_units: int = Field(
         default=3,
         metadata={
             "x_oap_ui_config": {
@@ -102,7 +102,7 @@ class Configuration(BaseModel):
                 "min": 1,
                 "max": 20,
                 "description": "Maximum number of research units to run concurrently. This will allow the researcher to use multiple sub-agents to conduct research. Note: with more concurrency, you may run into rate limits.",
-            }
+            },
         },
     )
     # Research Configuration
@@ -121,19 +121,19 @@ class Configuration(BaseModel):
                     {"value": "none", "label": "None"},
                 ],
                 "description": "Search API to use for research. NOTE: Make sure your Researcher Model supports the selected search API.",
-            }
+            },
         },
     )
 
     @classmethod
     def from_runnable_config(
-        cls, config: RunnableConfig | None = None
+        cls,
+        config: RunnableConfig | None = None,
     ) -> "Configuration":
         """Create a Configuration instance from a RunnableConfig."""
         configurable = config.get("configurable", {}) if config else {}
         field_names = list(cls.model_fields.keys())
         values: dict[str, Any] = {
-            field_name: os.environ.get(field_name.upper(), configurable.get(field_name))
-            for field_name in field_names
+            field_name: os.environ.get(field_name.upper(), configurable.get(field_name)) for field_name in field_names
         }
         return cls(**{k: v for k, v in values.items() if v is not None})

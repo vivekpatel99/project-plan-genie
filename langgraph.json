@@ -1,7 +1,7 @@
 {
   "dependencies": ["."],
   "graphs": {
-    "clarification_agent_subgraph": "./src/agent/clarification_agent_subgraph.py:graph",
+    "clarification_agent_subgraph": "./src/agent/clarification_agent_subgraph.py:graph"
   },
   "env": ".env"
 

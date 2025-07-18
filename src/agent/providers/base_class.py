@@ -15,21 +15,24 @@ class LLMProvider(ABC):
 
     @abstractmethod
     def _create_llm_instance(self) -> BaseChatModel:
-        """Abstract method to create LLM instance.
+        """
+        Abstract method to create LLM instance.
 
         This must be implemented by subclasses/Providers.
         """
         raise NotImplementedError
 
     def __getattr__(self, name: str) -> Any:
-        """Delegate attribute access to the underlying LLM instance.
+        """
+        Delegate attribute access to the underlying LLM instance.
 
         This is the magic that allows us to call methods like `invoke`,
         `stream`, etc., directly on an `LLMProvider` instance, and they
         will be forwarded to the actual `self.llm` object (e.g., ChatOpenAI).
         """
         if self.llm is None:
+            msg = f"'{self.__class__.__name__}' has no LLM instance. The LLM client may not be initialized yet."
             raise AttributeError(
-                f"'{self.__class__.__name__}' has no LLM instance. The LLM client may not be initialized yet."
+                msg,
             )
         return getattr(self.llm, name)

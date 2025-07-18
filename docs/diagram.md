@@ -37,4 +37,3 @@ graph TD
     style D fill:#ccf,stroke:#333,stroke-width:2px
     style E fill:#9f9,stroke:#333,stroke-width:2px
 ```
-

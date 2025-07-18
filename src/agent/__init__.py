@@ -1,4 +1,5 @@
-"""New LangGraph Agent.
+"""
+New LangGraph Agent.
 
 This module defines a custom graph.
 """
@@ -10,10 +11,10 @@ from .states import PlanningState, SearchQuery
 # from .info_gethering_agent import graph
 
 __all__ = [
-    "info_gethering_agent",
-    "providers",
-    "prompts",
+    "Configuration",
     "PlanningState",
     "SearchQuery",
-    "Configuration",
+    "info_gethering_agent",
+    "prompts",
+    "providers",
 ]

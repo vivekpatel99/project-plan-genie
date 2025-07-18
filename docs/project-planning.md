@@ -1,6 +1,6 @@
 ## Project Planner Agent: GitHub Task List
 
-Copy and paste the following into a GitHub Issue, Project, or TODO.md file to track your progress[1][2][3]:
+Copy and paste the following into a GitHub Issue, Project, or TODO.md file to track your progress[1][2]\[3\]:
 
 ### Phase 1: MVP Core
 
@@ -78,5 +78,3 @@ Copy and paste the following into a GitHub Issue, Project, or TODO.md file to tr
 - [ ] Implement request queuing/caching for API rate limits
 - [ ] A/B test prompt engineering approaches
 - [ ] Use LangGraph persistence for state management
-
-

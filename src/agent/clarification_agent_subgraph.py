@@ -69,7 +69,7 @@ For the verification message when no clarification is needed:
 - Confirm that you will now begin the research process
 - Keep the message concise and professional
 """
-transform_messages_into_research_topic_prompt = """You will be given a set of messages that have been exchanged so far between yourself and the user. 
+transform_messages_into_research_topic_prompt = """You will be given a set of messages that have been exchanged so far between yourself and the user.
 Your job is to translate these messages into a more detailed and concrete research question that will be used to guide the research.
 The messages that have been exchanged so far between yourself and the user are:
 <Messages>
@@ -121,29 +121,25 @@ async def clarify_with_user(state: AgentState, config: RunnableConfig):
         [
             HumanMessage(
                 content=clarify_with_user_instructions.format(
-                    messages=get_buffer_string(messages)
-                )
-            )
-        ]
+                    messages=get_buffer_string(messages),
+                ),
+            ),
+        ],
     )
     if response.need_clarification:
         return Command(
             goto=END,
             update={
-                "messages": messages + [AIMessage(content=response.question)],
+                "messages": [*messages, AIMessage(content=response.question)],
             },
         )
 
-    else:
-        return Command(
-            goto="write_research_brief",
-            update={
-                "messages": messages
-                + [
-                    AIMessage(content=response.verification),
-                ],
-            },
-        )
+    return Command(
+        goto="write_research_brief",
+        update={
+            "messages": [*messages, AIMessage(content=response.verification)],
+        },
+    )
 
 
 async def write_research_brief(state: AgentState, config: RunnableConfig):
@@ -163,10 +159,10 @@ async def write_research_brief(state: AgentState, config: RunnableConfig):
         [
             HumanMessage(
                 content=transform_messages_into_research_topic_prompt.format(
-                    messages=get_buffer_string(state.get("messages", []))
-                )
-            )
-        ]
+                    messages=get_buffer_string(state.get("messages", [])),
+                ),
+            ),
+        ],
     )
     return Command(
         goto=END,
@@ -177,7 +173,9 @@ async def write_research_brief(state: AgentState, config: RunnableConfig):
 
 
 clarify_graph = StateGraph(
-    AgentState, input_schema=AgentInputState, config_schema=Configuration
+    AgentState,
+    input_schema=AgentInputState,
+    config_schema=Configuration,
 )
 
 clarify_graph.add_node("clarify_with_user", clarify_with_user)

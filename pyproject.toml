@@ -48,30 +48,6 @@ packages = ["langgraph.templates.agent", "agent"]
 # `"*"` means it applies to all packages defined.
 "*" = ["py.typed"]
 
-[tool.ruff]
-lint.select = [
-    "E",    # pycodestyle
-    "F",    # pyflakes
-    "I",    # isort
-    "D",    # pydocstyle
-    "D401", # First line should be in imperative mood
-    "T201", # Forbids `print` statements, encouraging logging instead.
-    "UP",   # pyupgrade (suggests modern Python syntax)
-]
-lint.ignore = [
-    "UP006",
-    "UP007",
-    # We actually do want to import from typing_extensions
-    "UP035",
-    # Relax the convention by _not_ requiring documentation for every function parameter.
-    "D417", # "Missing argument descriptions in the docstring"
-    "E501", # Line too long (handled by formatter, but good to have for linting)
-]
-[tool.ruff.lint.per-file-ignores]
-"tests/*" = ["D", "UP"]
-
-[tool.ruff.lint.pydocstyle]
-convention = "google"
 
 [dependency-groups]
 dev = ["anyio", "langgraph-cli[inmem]", "mypy", "pytest", "ruff"]
