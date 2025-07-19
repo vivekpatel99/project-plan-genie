@@ -51,5 +51,14 @@
   "notebook.codeActionsOnSave": {
     "source.organizeImports": true
   },
+  "cSpell.words": [
+    "agentic",
+    "ainvoke",
+    "checkpointer",
+    "DUCKDUCKGO",
+    "GOOGLESEARCH",
+    "rootutils",
+    "tavily"
+  ],
 
 }

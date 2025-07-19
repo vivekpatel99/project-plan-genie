@@ -13,8 +13,7 @@ class SearchAPI(Enum):
 
     OPENAI = "openai"
     TAVILY = "tavily"
-    DUCKDUCKGO = "duckduckgo"
-    GOOGLESEARCH = "googlesearch"
+    DUCKDUCKGO = "duckduckgo"  # TODO(@viv): #123 Add duckduckgo
     NONE = "none"
 
 
@@ -23,13 +22,14 @@ class Defaults(Enum):
 
     RESEARCH_MODEL: str = "openai:gpt-4o"
     COMPRESSION_MODEL: str = "openai:gpt-4o-mini"
+    SUMMARIZATION_MODEL: str = "openai:gpt-4o-mini"
     SEARCH_API: SearchAPI = SearchAPI.TAVILY
 
 
 class Configuration(BaseModel):
     """Configuration for the Agent/App."""
 
-    # --- Research Model ---
+    # --- Research Model --------------------------------------------------------------------------
     research_model: str = Field(
         default=Defaults.RESEARCH_MODEL.value,
         metadata={
@@ -50,7 +50,25 @@ class Configuration(BaseModel):
             },
         },
     )
-    # --- Compression Model ---
+    search_api: SearchAPI = Field(
+        default=Defaults.SEARCH_API.value,
+        metadata={
+            "x_oap_ui_config": {
+                "type": "select",
+                "default": "tavily",
+                "options": [
+                    {"label": "Tavily", "value": SearchAPI.TAVILY.value},
+                    {
+                        "label": "OpenAI Native Web Search",
+                        "value": SearchAPI.OPENAI.value,
+                    },
+                    {"value": "none", "label": "None"},
+                ],
+                "description": "Search API to use for research. NOTE: Make sure your Researcher Model supports the selected search API.",
+            },
+        },
+    )
+    # --- Compression Model --------------------------------------------------------------------------
     compression_model: str = Field(
         default=Defaults.COMPRESSION_MODEL.value,
         metadata={
@@ -68,6 +86,37 @@ class Configuration(BaseModel):
                 "type": "number",
                 "default": 8192,
                 "description": "Maximum output tokens for compression model",
+            },
+        },
+    )
+    compression_attempts: int = Field(
+        default=3,
+        metadata={
+            "x_oap_ui_config": {
+                "type": "number",
+                "default": 3,
+                "description": "How many times to attempt compression by the compression model before giving up",
+            },
+        },
+    )
+    # --- Summarization Model --------------------------------------------------------------------------
+    summarization_model: str = Field(
+        default=Defaults.SUMMARIZATION_MODEL.value,
+        metadata={
+            "x_oap_ui_config": {
+                "type": "text",
+                "default": Defaults.SUMMARIZATION_MODEL.value,
+                "description": "Model for summarizing research results from Tavily search results",
+            },
+        },
+    )
+    summarization_model_max_tokens: int = Field(
+        default=8192,
+        metadata={
+            "x_oap_ui_config": {
+                "type": "number",
+                "default": 8192,
+                "description": "Maximum output tokens for summarization model",
             },
         },
     )
@@ -105,22 +154,16 @@ class Configuration(BaseModel):
             },
         },
     )
-    # Research Configuration
-    search_api: SearchAPI = Field(
-        default=Defaults.SEARCH_API.value,
+    max_react_tool_calls: int = Field(
+        default=5,
         metadata={
             "x_oap_ui_config": {
-                "type": "select",
-                "default": "tavily",
-                "options": [
-                    {"label": "Tavily", "value": SearchAPI.TAVILY.value},
-                    {
-                        "label": "OpenAI Native Web Search",
-                        "value": SearchAPI.OPENAI.value,
-                    },
-                    {"value": "none", "label": "None"},
-                ],
-                "description": "Search API to use for research. NOTE: Make sure your Researcher Model supports the selected search API.",
+                "type": "slider",
+                "default": 5,
+                "min": 1,
+                "max": 30,
+                "step": 1,
+                "description": "Maximum number of tool calling iterations to make in a single researcher step.",
             },
         },
     )

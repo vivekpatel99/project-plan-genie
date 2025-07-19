@@ -114,5 +114,11 @@ lint.ignore = [
     "RET504",  # Flake8-return - Checks for variable assignments that immediately precede a return of the assigned variable.
     "FA102",   # Flake8-future-annotations - Missing `from __future__ import annotations`, but uses PEP 604 union
     "B904",    # Checks for raise statements in exception handlers that lack a from clause.
-    "F403",    #Checks for the use of wildcard imports.
+    "F403",    # Checks for the use of wildcard imports.
+
+    "TD002",  # Missing author in TODO
+    "TD003",  # Missing issue link on TODO
+    "FIX002", # Line contains TODO
+    "BLE001", # Exception not handled
+
 ]

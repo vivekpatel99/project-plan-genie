@@ -28,12 +28,12 @@ class AgentState(MessagesState):
 class Summary(BaseModel):
     """contain summary and key excerpts."""
 
-    Summary: str
+    summary: str
     key_excerpts: str
 
 
 class ClarifyWithUser(BaseModel):
-    """Call this tool to ask a clarification questions/infomartion to the user."""
+    """Call this tool to ask a clarification questions/information to the user."""
 
     need_clarification: bool = Field(
         description="Whether the user needs to be asked a clarification question.",
@@ -54,7 +54,7 @@ class ResearchQuestion(BaseModel):
     )
 
 
-# --- Superviser Agent--------------------------------------------------------------
+# --- Supervisor Agent--------------------------------------------------------------
 
 
 class ConductResearch(BaseModel):
@@ -65,10 +65,10 @@ class ConductResearch(BaseModel):
     )
 
 
-class SuperviserState(TypedDict):
-    """Superviser State."""
+class SupervisorState(TypedDict):
+    """Supervisor State."""
 
-    superviser_messages: Annotated[list[MessageLikeRepresentation], add_messages]
+    supervisor_messages: Annotated[list[MessageLikeRepresentation], add_messages]
     research_brief: str | None
     raw_notes: Annotated[list[str] | None, add_messages] = None
     notes: Annotated[list[str] | None, add_messages] = None
@@ -82,16 +82,16 @@ class ResearchComplete(BaseModel):
     """Call this tool to indicate that the research is complete."""
 
 
-class ResearchState(BaseModel):
+class ResearchState(TypedDict):
     """The state of the research agent."""
 
     research_messages: Annotated[list[MessageLikeRepresentation], operator.add]
     tool_call_iterations: int = 0
     research_topic: str
     compressed_research: str
-    raw_notes: Annotated[list[str], add_messages] = []
+    raw_notes: Annotated[list[str] | None, add_messages] = None
 
 
 class ResearcherOutputState(BaseModel):
     compressed_research: str
-    raw_notes: Annotated[list[str], add_messages] = []
+    raw_notes: Annotated[list[str] | None, add_messages] = None

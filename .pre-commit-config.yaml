@@ -23,7 +23,7 @@ repos:
     rev: v0.12.4
     hooks:
       - id: ruff-check
-        args: [--fix, --exit-non-zero-on-fix]
+        args: [--fix]
       - id: ruff-format
         types_or: [python, pyi]
 
@@ -61,10 +61,3 @@ repos:
         args:
           - --skip=logs/**,data/**,*.ipynb
           - --ignore-words-list=abc,def,fpr,tpr,roc_auc,auc
-
-  - repo: https://github.com/nbQA-dev/nbQA
-    rev: 1.9.1
-    hooks:
-      - id: nbqa-ruff
-        args: [--fix, --exit-non-zero-on-fix]
-      - id: nbqa-ruff-format

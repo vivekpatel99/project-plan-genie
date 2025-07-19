@@ -59,7 +59,7 @@ class ProjectState(TypedDict):
 
 **Production Features**:
 
-- **Model Provider Abstraction**: Easy switching between OpenAI, Anthropic, etc.
+- **Model Provider Abstraction**: Easy switching between OpenAI, Perplexity, gemini, etc.
 - **Error Handling**: Comprehensive error recovery and retry mechanisms
 - **Token Optimization**: Efficient prompt engineering and response caching
 - **State Persistence**: Save and resume project planning sessions

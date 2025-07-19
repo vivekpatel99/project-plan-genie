@@ -6,7 +6,7 @@ from langchain.chat_models import init_chat_model
 from langchain_core.runnables import RunnableConfig
 from langgraph.types import Command
 
-from agent.states import ConductResearch, ResearchComplete, SuperviserState
+from agent.states import ConductResearch, ResearchComplete, SupervisorState
 
 try:
     from .configuration import Configuration
@@ -61,7 +61,7 @@ You can use any of the tools provided to you to find resources that can help ans
 """
 
 
-async def supervisor(state: SuperviserState, config: RunnableConfig):
+async def supervisor(state: SupervisorState, config: RunnableConfig):
     Command[Literal["superviser_tool"]]
     config = Configuration.from_runnable_config(config)
     # research_model_config = {
