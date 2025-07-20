@@ -11,16 +11,16 @@ from langgraph.types import Command
 try:
     from .configuration import Configuration
     from .prompts import COMPRESS_RESEARCH_SIMPLE_HUMAN_MESSAGE, COMPRESS_RESEARCH_SYSTEM_PROMPT
-    from .states import ResearcherOutputState, ResearchState
-    from .utils import execute_tool_safely, get_all_tools, openai_websearch_called
+    from .states import ResearcherOutputState, ResearchState, StatesKeys
+    from .utils import execute_tool_safely, get_all_tools, get_today_str, openai_websearch_called
 except ImportError:
     import rootutils
 
     rootutils.setup_root(__file__, indicator=".git", pythonpath=True)
     from src.agent.configuration import Configuration
     from src.agent.prompts import COMPRESS_RESEARCH_SIMPLE_HUMAN_MESSAGE, COMPRESS_RESEARCH_SYSTEM_PROMPT
-    from src.agent.states import ResearcherOutputState, ResearchState
-    from src.agent.utils import execute_tool_safely, get_all_tools, openai_websearch_called
+    from src.agent.states import ResearcherOutputState, ResearchState, StatesKeys
+    from src.agent.utils import execute_tool_safely, get_all_tools, get_today_str, openai_websearch_called
 
 # Initialize a configurable model that we will use throughout the agent
 configurable_model = init_chat_model(
@@ -30,7 +30,7 @@ configurable_model = init_chat_model(
 
 async def research_agent(state: ResearchState, config: RunnableConfig):
     config = Configuration.from_runnable_config(config)
-    research_msgs = state.get("research_messages", [])
+    research_msgs = state.get(StatesKeys.RESEARCH_MSGS.value, [])
     tools = await get_all_tools(config)
 
     if len(tools) <= 1:  # ResearchComplete is default tool in the list
@@ -59,8 +59,8 @@ async def research_agent(state: ResearchState, config: RunnableConfig):
     return Command(
         goto="research_tools",
         update={
-            "research_messages": [response],
-            "tool_call_iterations": state.get("tool_call_iterations", 0) + 1,
+            StatesKeys.RESEARCH_MSGS.value: [response],
+            StatesKeys.TOOL_CALL_ITERATIONS.value: state.get(StatesKeys.TOOL_CALL_ITERATIONS.value, 0) + 1,
         },
     )
 
@@ -75,7 +75,7 @@ async def research_tools(state: ResearchState, config: RunnableConfig):
     Otherwise, go back to research_agent.
     """
     config = Configuration.from_runnable_config(config)
-    research_msgs = state.get("research_messages", [])
+    research_msgs = state.get(StatesKeys.RESEARCH_MSGS.value, [])
     most_recent_message = research_msgs[-1]
 
     # Early exit Criteria: No tools calls (or native web search calls) were made by the researcher
@@ -104,8 +104,8 @@ async def research_tools(state: ResearchState, config: RunnableConfig):
     ]
     # Late Exit Criteria: We have exceeded our max guardrail tool call iterations or the most recent message contains ResearchComplete tool call
     # These are late exit criteria because we need to add ToolMessage
-    update = {"research_messages": tool_outputs}
-    if state.get("tool_call_iterations", 0) >= config.max_react_tool_calls or any(
+    update = {StatesKeys.RESEARCH_MSGS.value: tool_outputs}
+    if state.get(StatesKeys.TOOL_CALL_ITERATIONS.value, 0) >= config.max_react_tool_calls or any(
         tool_call["name"] == "ResearchComplete" for tool_call in tool_calls
     ):
         return Command(
@@ -125,11 +125,11 @@ async def compress_research(state: ResearchState, config: RunnableConfig):
             # "api_key": config.compress_model_api_key,
         },
     )
-    researcher_msgs = state.get("research_messages", [])
+    researcher_msgs = state.get(StatesKeys.RESEARCH_MSGS.value, [])
 
     # Update the system prompts to now focus on compression rather than research
     researcher_msgs[0] = SystemMessage(
-        content=COMPRESS_RESEARCH_SYSTEM_PROMPT,
+        content=COMPRESS_RESEARCH_SYSTEM_PROMPT.format(data=get_today_str()),
     )
     researcher_msgs.append(HumanMessage(content=COMPRESS_RESEARCH_SIMPLE_HUMAN_MESSAGE))
     while synthesize_attempts < config.compression_attempts:
@@ -138,8 +138,8 @@ async def compress_research(state: ResearchState, config: RunnableConfig):
                 researcher_msgs,
             )
             return {
-                "compressed_research": str(response.content),
-                "raw_notes": [
+                StatesKeys.COMPRESSED_RESEARCH.value: str(response.content),
+                StatesKeys.RAW_NOTES.value: [
                     "\n".join(
                         [str(m.content) for m in filter_messages(researcher_msgs, include_types=["tool", "ai"])],
                     ),
@@ -157,8 +157,8 @@ async def compress_research(state: ResearchState, config: RunnableConfig):
             #     continue
             print(f"Error synthesizing research report: {e}")
     return {
-        "compressed_research": "Error synthesizing research report: Maximum retries exceeded",
-        "raw_notes": [
+        StatesKeys.COMPRESSED_RESEARCH.value: "Error synthesizing research report: Maximum retries exceeded",
+        StatesKeys.RAW_NOTES.value: [
             "\n".join([str(m.content) for m in filter_messages(researcher_msgs, include_types=["tool", "ai"])]),
         ],
     }

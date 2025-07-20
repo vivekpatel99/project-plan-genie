@@ -120,5 +120,5 @@ lint.ignore = [
     "TD003",  # Missing issue link on TODO
     "FIX002", # Line contains TODO
     "BLE001", # Exception not handled
-
+    "F401",   # Unused import
 ]

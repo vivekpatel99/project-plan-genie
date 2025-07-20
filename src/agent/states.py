@@ -19,8 +19,8 @@ class StatesKeys(str, Enum):
     NOTES = "notes"
     FINAL_REPORT = "final_report"
     RESEARCH_TOPIC = "research_topic"
-    RESEARCH_ITERATION = "research_iteration"
-    RESEARCH_MESSAGES = "research_messages"
+    RESEARCH_ITERATIONS = "research_iterations"
+    RESEARCH_MSGS = "research_messages"
     TOOL_CALL_ITERATIONS = "tool_call_iterations"
     COMPRESSED_RESEARCH = "compressed_research"
 
@@ -89,7 +89,7 @@ class SupervisorState(TypedDict):
     research_brief: str | None
     raw_notes: Annotated[list[str] | None, add_messages] = None
     notes: Annotated[list[str] | None, add_messages] = None
-    research_iteration: int = 0
+    research_iterations: int = 0
 
 
 # --- Research Agent--------------------------------------------------------------

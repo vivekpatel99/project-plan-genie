@@ -2,7 +2,8 @@
   "dependencies": ["."],
   "graphs": {
     "clarification_agent_subgraph": "./src/agent/clarification_agent_subgraph.py:graph",
-    "researcher_agent_subgraph": "./src/agent/researcher_agent.py:researcher_graph"
+    "researcher_agent_subgraph": "./src/agent/researcher_agent.py:researcher_subgraph",
+    "supervisor_agent_subgraph": "./src/agent/supervisor_agent.py:supervisor_subgraph"
   },
   "env": ".env"
 
