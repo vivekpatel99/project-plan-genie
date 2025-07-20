@@ -193,19 +193,93 @@ def get_today_str() -> str:
 
 
 def is_token_limit_exceeded(exception: Exception, model_name: str | None = None):
-    raise NotImplementedError
+    """
+    Checks if a given exception indicates that the token limit for a specific model provider has been exceeded.
+
+        exception (Exception): The exception to inspect.
+        model_name (str | None, optional): The name of the model that raised the exception. Used to determine the provider.
+
+        bool: True if the exception is due to exceeding the token limit for the detected provider, False otherwise.
+
+    Supported Providers:
+        - OpenAI (model_name starts with "openai")
+        - Gemini/Google (model_name starts with "gemini:" or "google:")
+        - Perplexity (model_name starts with "sonar")
+
+    Note:
+        If model_name is not provided or does not match a supported provider, returns False.
+
+    """
+    error_str = str(exception).lower()
+    provider = None
+    if model_name:
+        model_name = model_name.lower()
+        if model_name.startswith("openai"):
+            provider = "openai"
+        elif model_name.startswith(("gemini:", "google:")):
+            provider = "gemini"
+        elif model_name.startswith("sonar"):
+            provider = "perplexity"
+
+    if provider == "openai":
+        return _check_openai_token_limit(exception, error_str)
+    if provider == "gemini":
+        return _check_gemini_token_limit(exception, error_str)
+    if provider == "perplexity":
+        return _check_perplexity_ai_token_limit(exception, error_str)
+    return False
 
 
 def _check_openai_token_limit(exception: Exception, error_message: str | None = None):
-    raise NotImplementedError
+    """
+    Check if the given exception is related to OpenAI token limit issues.
+
+    This function determines whether an exception is specifically due to exceeding OpenAI's
+    token limits by inspecting the exception type, class name, and module. It checks for
+    OpenAI-related errors that indicate token or context length issues.
+
+    Args:
+        exception (Exception): The exception to examine.
+        error_message (str | None): Optional additional error message to search for keywords.
+
+    Returns:
+        bool: True if the exception indicates a token limit issue with OpenAI, False otherwise.
+
+    """
+    exception_type = str(type(exception))
+    class_name = exception.__class__.__name__
+    module_name = getattr(exception.__class__, "__module__", "")
+    is_openai_exception = "openai" in exception_type.lower() or "openai" in module_name.lower()
+
+    is_bad_request = class_name == ["BadRequestError", "InvalidRequestError"]
+    if is_openai_exception and is_bad_request:
+        token_keywords = ("token", "context", "length", "maximum context", "reduce")
+        if any(keyword in error_message for keyword in token_keywords):
+            return True
+    return bool(
+        hasattr(exception, "code")
+        and hasattr(exception, "type")
+        and (
+            getattr(exception, "code", "") == "context_length_exceeded"
+            or getattr(exception, "type", "") == "invalid_request_error"
+        ),
+    )
 
 
 def _check_perplexity_ai_token_limit(exception: Exception, error_message: str | None = None):
     raise NotImplementedError
 
 
-def _check_gemini_token_limit(exception: Exception, error_message: str | None = None):
-    raise NotImplementedError
+def _check_gemini_token_limit(exception: Exception):
+    exception_type = str(type(exception))
+    class_name = exception.__class__.__name__
+    module_name = getattr(exception.__class__, "__module__", "")
+
+    is_google_exception = "google" in exception_type.lower() or "google" in module_name.lower()
+    is_resource_exhausted = class_name in ["ResourceExhausted", "GoogleGenerativeAIFetchError"]
+    if is_google_exception and is_resource_exhausted:
+        return True
+    return "google.api_core.exceptions.resourceexhausted" in exception_type.lower()
 
 
 # TODO(@viv): fill  out this  -Move to constants 123
