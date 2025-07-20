@@ -38,6 +38,7 @@ dependencies = [
     "langchain-google-genai>=2.1.5",
     "ipykernel>=6.29.5",
     "langchain-perplexity>=0.1.1",
+    "python-box>=7.3.2",
 ]
 
 [project.optional-dependencies]
@@ -70,3 +71,6 @@ dev = [
     "pytest",
     "ruff",
 ]
+[tool.ruff.lint]
+# Prevent automatic fixing of unused imports
+unfixable = ["F401"]

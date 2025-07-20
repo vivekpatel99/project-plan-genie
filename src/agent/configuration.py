@@ -41,11 +41,11 @@ class Configuration(BaseModel):
         },
     )
     research_model_max_tokens: int = Field(
-        default=10000,
+        default=10_000,
         metadata={
             "x_oap_ui_config": {
                 "type": "number",
-                "default": 10000,
+                "default": 10_000,
                 "description": "Maximum output tokens for research model",
             },
         },
@@ -65,6 +65,44 @@ class Configuration(BaseModel):
                     {"value": "none", "label": "None"},
                 ],
                 "description": "Search API to use for research. NOTE: Make sure your Researcher Model supports the selected search API.",
+            },
+        },
+    )
+    max_concurrent_research_units: int = Field(
+        default=3,
+        metadata={
+            "x_oap_ui_config": {
+                "type": "slider",
+                "default": 3,
+                "min": 1,
+                "max": 20,
+                "description": "Maximum number of research units to run concurrently. This will allow the researcher to use multiple sub-agents to conduct research. Note: with more concurrency, you may run into rate limits.",
+            },
+        },
+    )
+    max_research_iterations: int = Field(
+        default=3,
+        metadata={
+            "x_oap_ui_config": {
+                "type": "slider",
+                "default": 3,
+                "min": 1,
+                "max": 10,
+                "step": 1,
+                "description": "Maximum number of research iterations for the Research Supervisor. This is the number of times the Research Supervisor will reflect on the research and ask follow-up questions.",
+            },
+        },
+    )
+    max_react_tool_calls: int = Field(
+        default=5,
+        metadata={
+            "x_oap_ui_config": {
+                "type": "slider",
+                "default": 5,
+                "min": 1,
+                "max": 30,
+                "step": 1,
+                "description": "Maximum number of tool calling iterations to make in a single researcher step.",
             },
         },
     )
@@ -139,31 +177,6 @@ class Configuration(BaseModel):
                 "type": "boolean",
                 "default": True,
                 "description": "Whether to allow the researcher to ask the user clarifying questions before starting research",
-            },
-        },
-    )
-    max_concurrent_research_units: int = Field(
-        default=3,
-        metadata={
-            "x_oap_ui_config": {
-                "type": "slider",
-                "default": 3,
-                "min": 1,
-                "max": 20,
-                "description": "Maximum number of research units to run concurrently. This will allow the researcher to use multiple sub-agents to conduct research. Note: with more concurrency, you may run into rate limits.",
-            },
-        },
-    )
-    max_react_tool_calls: int = Field(
-        default=5,
-        metadata={
-            "x_oap_ui_config": {
-                "type": "slider",
-                "default": 5,
-                "min": 1,
-                "max": 30,
-                "step": 1,
-                "description": "Maximum number of tool calling iterations to make in a single researcher step.",
             },
         },
     )

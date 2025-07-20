@@ -66,6 +66,14 @@ async def research_agent(state: ResearchState, config: RunnableConfig):
 
 
 async def research_tools(state: ResearchState, config: RunnableConfig):
+    """
+    Execute tools and gather results.
+
+    If no tool calls were made (or only native web search calls), then immediately go to compress_research.
+    Otherwise, execute each tool call and gather the results.
+    If we have exceeded our max guardrail tool call iterations or the most recent message contains ResearchComplete tool call, then go to compress_research.
+    Otherwise, go back to research_agent.
+    """
     config = Configuration.from_runnable_config(config)
     research_msgs = state.get("research_messages", [])
     most_recent_message = research_msgs[-1]
@@ -82,7 +90,8 @@ async def research_tools(state: ResearchState, config: RunnableConfig):
     tool_calls = most_recent_message.tool_calls
 
     async_responses = [
-        execute_tool_safely(tools_by_name[tool_call["name"]], tool_call["args"], config) for tool_call in tool_calls
+        execute_tool_safely(tools_by_name[tool_call["name"]], tool_call["args"], config.model_dump())
+        for tool_call in tool_calls
     ]
     observations = await asyncio.gather(*async_responses)
     tool_outputs = [
@@ -162,7 +171,7 @@ research_builder.add_node("research_tools", research_tools)
 
 research_builder.add_edge(START, "research_agent")
 research_builder.add_edge("compress_research", END)
-researcher_graph = research_builder.compile(name="Research Agent")
+researcher_subgraph = research_builder.compile(name="Research Agent")
 
 research_brief = """
 How can I develop an agentic AI-powered note-taking application leveraging LangGraph for my personal use, with features including image-to-text conversion, formatting, and integration with Notion, while showcasing my skills? I am seeking to:

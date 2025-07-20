@@ -1,4 +1,5 @@
 import asyncio
+import datetime
 from typing import Annotated, Literal
 
 from langchain.chat_models import init_chat_model
@@ -175,15 +176,20 @@ def openai_websearch_called(response):
     return False
 
 
-async def execute_tool_safely(tool, args, config: RunnableConfig | None = None):
+async def execute_tool_safely(tool, args, config: dict | None = None):
     # config = Configuration.from_runnable_config(config)
     try:
-        return await tool.ainvoke(args, config.model_dump())
+        return await tool.ainvoke(args, config)
     except Exception as e:
         # import traceback
 
         # print(f"Error executing tool: {e} - {traceback.format_exc()}")
         return f"Error executing tool: {e}"  # - {traceback.format_exc()}"
+
+
+def get_today_str() -> str:
+    """Get current date in a human-readable format."""
+    return datetime.datetime.now(tz=datetime.UTC).strftime("%a %b %-d, %Y")
 
 
 def is_token_limit_exceeded(exception: Exception, model_name: str | None = None):
