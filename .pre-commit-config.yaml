@@ -19,6 +19,11 @@ repos:
         args: [--enforce-all, --maxkb=70000] # 70mb
         require_serial: true
 
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v3.20.0
+    hooks:
+      - id: pyupgrade
+
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.12.4
     hooks:
