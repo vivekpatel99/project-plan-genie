@@ -1,6 +1,6 @@
 ## Project Planner Agent: GitHub Task List
 
-Copy and paste the following into a GitHub Issue, Project, or TODO.md file to track your progress[1][2][3]:
+Copy and paste the following into a GitHub Issue, Project, or TODO.md file to track your progress[1][2]\[3\]:
 
 ### Phase 1: MVP Core
 
@@ -19,7 +19,7 @@ Copy and paste the following into a GitHub Issue, Project, or TODO.md file to tr
 
 ### Phase 3: Production Ready
 
-- [ ] Abstract model providers (OpenAI, Anthropic, etc.) using the Strategy Pattern
+- [ ] Abstract model providers (OpenAI, Perplexity, etc.) using the Strategy Pattern
 - [ ] Add robust error handling and retry mechanisms
 - [ ] Optimize token usage (prompt engineering, response caching)
 - [ ] Implement state persistence (save/resume planning sessions)
@@ -58,7 +58,7 @@ Copy and paste the following into a GitHub Issue, Project, or TODO.md file to tr
 - [ ] Implement intelligent clarification agent for ambiguous requirements
 - [ ] Support multi-modal input (text, voice, document upload)
 - [ ] Generate visual project timelines and export plans (PDF, Gantt, markdown)
-- [ ] Integrate with external tools (GitHub, Jira, Trello)
+- [ ] Integrate with external tools (GitHub)
 
 ### Technical Implementation
 
@@ -78,5 +78,3 @@ Copy and paste the following into a GitHub Issue, Project, or TODO.md file to tr
 - [ ] Implement request queuing/caching for API rate limits
 - [ ] A/B test prompt engineering approaches
 - [ ] Use LangGraph persistence for state management
-
-

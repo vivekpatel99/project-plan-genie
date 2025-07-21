@@ -1,4 +1,4 @@
-"""Perplexity Provider defination."""
+"""Perplexity Provider definition."""
 
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_perplexity import ChatPerplexity
@@ -7,13 +7,17 @@ from .base_class import LLMProvider
 
 
 class PerplexityProvider(LLMProvider):
-    """Concrete LLM provider for Perplexity AI models.
+    """
+    Concrete LLM provider for Perplexity AI models.
 
     list of the available models - https://docs.perplexity.ai/models/model-cards.
     """
 
     def __init__(
-        self, model_name: str = "sonar", temperature: float = 0.0, **kwargs
+        self,
+        model_name: str = "sonar",
+        temperature: float = 0.0,
+        **kwargs,
     ) -> ChatPerplexity:
         """Initialize the OpenAIProvider."""
         self.model_name = model_name
@@ -25,7 +29,10 @@ class PerplexityProvider(LLMProvider):
         """Concrete LLM provider for OpenAI models."""
         try:
             return ChatPerplexity(
-                model=self.model_name, temperature=self.temperature, **self.kwargs
+                model=self.model_name,
+                temperature=self.temperature,
+                **self.kwargs,
             )
-        except Exception as e:
-            raise RuntimeError(f"Failed to create ChatOpenAI instance: {e}")
+        except RuntimeError as e:
+            msg = f"Failed to create ChatOpenAI instance: {e}"
+            raise RuntimeError(msg)

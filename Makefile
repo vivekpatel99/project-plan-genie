@@ -10,7 +10,7 @@ test:
 	python -m pytest $(TEST_FILE)
 
 integration_tests:
-	python -m pytest tests/integration_tests 
+	python -m pytest tests/integration_tests
 
 test_watch:
 	python -m ptw --snapshot-update --now . -- -vv tests/unit_tests
@@ -64,4 +64,3 @@ help:
 	@echo 'tests                        - run unit tests'
 	@echo 'test TEST_FILE=<test_file>   - run all tests in file'
 	@echo 'test_watch                   - run unit tests in watch mode'
-

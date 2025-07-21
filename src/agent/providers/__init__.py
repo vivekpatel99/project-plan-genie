@@ -7,7 +7,7 @@ from .perplexity_provider import PerplexityProvider
 
 __all__ = [
     "LLMProvider",
+    "ModelProviderFactory",
     "OpenAIProvider",
     "PerplexityProvider",
-    "ModelProviderFactory",
 ]

@@ -6,10 +6,8 @@
       "editor.codeActionsOnSave": {
         "source.fixAll.ruff": "explicit",
         "source.organizeImports.ruff": "explicit"
-      }
+      },
     },
-
-
     "python.analysis.autoSearchPaths": true,
     "python.analysis.diagnosticSeverityOverrides": {
         "reportMissingImports": "none"
@@ -51,5 +49,14 @@
   "notebook.codeActionsOnSave": {
     "source.organizeImports": true
   },
+  "cSpell.words": [
+    "agentic",
+    "ainvoke",
+    "checkpointer",
+    "DUCKDUCKGO",
+    "GOOGLESEARCH",
+    "rootutils",
+    "tavily"
+  ],
 
 }

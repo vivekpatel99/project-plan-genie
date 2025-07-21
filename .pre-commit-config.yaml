@@ -20,11 +20,12 @@ repos:
         require_serial: true
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.12.3
+    rev: v0.12.4
     hooks:
-      - id: ruff
-        args: [--fix, --exit-non-zero-on-fix]
+      - id: ruff-check
+        args: [--fix]
       - id: ruff-format
+        types_or: [python, pyi]
 
   - repo: https://github.com/PyCQA/bandit
     rev: 1.8.6
@@ -60,10 +61,3 @@ repos:
         args:
           - --skip=logs/**,data/**,*.ipynb
           - --ignore-words-list=abc,def,fpr,tpr,roc_auc,auc
-
-  - repo: https://github.com/nbQA-dev/nbQA
-    rev: 1.9.1
-    hooks:
-      - id: nbqa-ruff
-        args: [--fix, --exit-non-zero-on-fix]
-      - id: nbqa-ruff-format

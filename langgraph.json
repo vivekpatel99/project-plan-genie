@@ -1,8 +1,9 @@
 {
   "dependencies": ["."],
   "graphs": {
-    "info_gethering_agent": "./src/agent/info_gethering_agent.py:graph",
-    "research_agent": "./src/agent/research_agent.py:graph"
+    "clarification_agent_subgraph": "./src/agent/clarification_agent_subgraph.py:graph",
+    "researcher_agent_subgraph": "./src/agent/researcher_agent.py:researcher_subgraph",
+    "supervisor_agent_subgraph": "./src/agent/supervisor_agent.py:supervisor_subgraph"
   },
   "env": ".env"
 
