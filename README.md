@@ -76,11 +76,8 @@ This project planning agent helps developers and teams break down complex projec
 - [Contributing Guidelines](CONTRIBUTING.md)
 - [Architecture Decisions](docs/adr/)
 
-## 🤝 Contributing
+## 📚 Reference
 
-This project follows software engineering best practices and welcomes contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details on:
-
-- Code style and formatting (Black, pylint)
-- Testing requirements
-- Documentation standards
-- Pull request process
+1. [open_deep_research](https://github.com/langchain-ai/open_deep_research/tree/main)
+2. [pen Deep Research-Youtube](https://www.youtube.com/watch?v=agGiWUpxkhg)
+3. [LangGraph](https://github.com/langchain-ai/langgraph)
