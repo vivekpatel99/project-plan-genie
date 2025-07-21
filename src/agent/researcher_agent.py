@@ -44,6 +44,21 @@ configurable_model = init_chat_model(
 
 
 async def research_agent(state: ResearchState, config: RunnableConfig) -> Command["str"]:
+    """
+    Research Agent.
+
+    This agent is responsible for generating a research report given some messages
+    about the topic.
+
+    The agent will continue to call the research model until it has finished.
+
+    The agent will continue to call the research model until one of the
+    following conditions are met:
+
+    1. The research model returns a ResearchComplete tool call.
+    2. The number of research iterations exceeds the maximum number of
+       iterations specified in the configuration.
+    """
     config = Configuration.from_runnable_config(config)
     research_msgs = state.get(StatesKeys.RESEARCH_MSGS.value, [])
     tools = await get_all_tools(config)
@@ -133,6 +148,29 @@ async def research_tools(
 
 
 async def compress_research(state: ResearchState, config: RunnableConfig) -> dict[str : str | list[str]]:
+    """
+    Compress research messages into a concise report.
+
+    This function attempts to synthesize research messages into a compressed
+    format using a configured compression model. It updates the system prompts
+    for compression and retries the synthesis process until successful or the
+    maximum number of attempts is reached. If successful, it returns a dictionary
+    containing the compressed research and raw notes. If it fails due to token
+    limits or other errors, it will prune messages and retry, or ultimately
+    return an error message.
+
+    Args:
+        state (ResearchState): The current state of the research process,
+            containing past messages and other relevant data.
+        config (RunnableConfig): Configuration parameters for the compression
+            model, including model type, max tokens, and the number of synthesis
+            attempts.
+
+    Returns:
+        dict[str, str | list[str]]: A dictionary with keys for the compressed
+        research content and raw notes, or an error message if synthesis fails.
+
+    """
     config = Configuration.from_runnable_config(config)
     synthesize_attempts = 0
     compression_model = configurable_model.with_config(

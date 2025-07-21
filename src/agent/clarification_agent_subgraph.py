@@ -10,9 +10,11 @@ from langchain_core.runnables import RunnableConfig
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import Command
 
+from agent.states import StatesKeys
+
 try:
     from .configuration import Configuration
-    from .states import AgentInputState, AgentState, ClarifyWithUser, ResearchQuestion
+    from .states import AgentInputState, AgentState, ClarifyWithUser, ResearchQuestion, StatesKeys
 
 except ImportError:
     import rootutils
@@ -21,12 +23,7 @@ except ImportError:
     from src.agent.configuration import Configuration
 
     # from src.agent.prompts import PROJECT_RESEARCH_AGENT_PROMPT, SEARCH_INSTRUCTIONS
-    from src.agent.states import (
-        AgentInputState,
-        AgentState,
-        ClarifyWithUser,
-        ResearchQuestion,
-    )
+    from src.agent.states import AgentInputState, AgentState, ClarifyWithUser, ResearchQuestion, StatesKeys
 
 
 clarify_with_user_instructions = """
@@ -103,7 +100,7 @@ async def clarify_with_user(state: AgentState, config: RunnableConfig):
     config = Configuration.from_runnable_config(config)
     if not config.allow_clarification:
         return Command(goto="write_research_brief")
-    messages = state["messages"]
+    messages = state[StatesKeys.MSGS.value]
     model_config = {
         "model": config.research_model,
         "max_tokens": config.research_model_max_tokens,
@@ -127,14 +124,14 @@ async def clarify_with_user(state: AgentState, config: RunnableConfig):
         return Command(
             goto=END,
             update={
-                "messages": [*messages, AIMessage(content=response.question)],
+                StatesKeys.MSGS.value: [*messages, AIMessage(content=response.question)],
             },
         )
 
     return Command(
         goto="write_research_brief",
         update={
-            "messages": [*messages, AIMessage(content=response.verification)],
+            StatesKeys.MSGS.value: [*messages, AIMessage(content=response.verification)],
         },
     )
 
@@ -156,7 +153,7 @@ async def write_research_brief(state: AgentState, config: RunnableConfig):
         [
             HumanMessage(
                 content=transform_messages_into_research_topic_prompt.format(
-                    messages=get_buffer_string(state.get("messages", [])),
+                    messages=get_buffer_string(state.get(StatesKeys.MSGS.value, [])),
                 ),
             ),
         ],
@@ -164,22 +161,22 @@ async def write_research_brief(state: AgentState, config: RunnableConfig):
     return Command(
         goto=END,
         update={
-            "research_brief": response.research_brief,
+            StatesKeys.RESEARCH_BRIEF.value: response.research_brief,
         },
     )
 
 
-clarify_graph = StateGraph(
+clarify_builder = StateGraph(
     AgentState,
     input_schema=AgentInputState,
     config_schema=Configuration,
 )
 
-clarify_graph.add_node("clarify_with_user", clarify_with_user)
-clarify_graph.add_node("write_research_brief", write_research_brief)
+clarify_builder.add_node("clarify_with_user", clarify_with_user)
+clarify_builder.add_node("write_research_brief", write_research_brief)
 
-clarify_graph.add_edge(START, "clarify_with_user")
-clarify_graph.add_edge("clarify_with_user", "write_research_brief")
-clarify_graph.add_edge("write_research_brief", END)
+clarify_builder.add_edge(START, "clarify_with_user")
+clarify_builder.add_edge("clarify_with_user", "write_research_brief")
+clarify_builder.add_edge("write_research_brief", END)
 
-graph = clarify_graph.compile(name="Clarify with User")
+clarify_subgraph = clarify_builder.compile(name="Clarify with User")

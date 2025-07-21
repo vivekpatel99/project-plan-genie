@@ -2,6 +2,7 @@
     // https://github.com/ArjanCodes/examples/blob/main/2024/vscode_python/.vscode/settings.json
     // Python settings
     "[python]": {
+      "editor.formatOnSave": true,
       "editor.defaultFormatter": "charliermarsh.ruff",
       "editor.codeActionsOnSave": {
         "source.fixAll.ruff": "explicit",
@@ -47,7 +48,12 @@
   "notebook.lineNumbers": "on",
   "notebook.scrolling.revealNextCellOnExecute": "none",
   "notebook.codeActionsOnSave": {
-    "source.organizeImports": true
+    "source.organizeImports": "explicit",
+    "source.fixAll.ruff": "explicit",
+    "source.fixAll.pyright": "explicit",
+    "source.fixAll.pyreverse": "explicit",
+    "source.fixAll.pydocstyle": "explicit",
+    "source.fixAll.pylint": "explicit"
   },
   "cSpell.words": [
     "agentic",

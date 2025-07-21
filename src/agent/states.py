@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field
 class StatesKeys(str, Enum):
     """States keys. used to pass updated states to avoid types."""
 
+    MSGS = "messages"
     SUPERVISOR_MSGS = "supervisor_messages"
     RESEARCH_BRIEF = "research_brief"
     RAW_NOTES = "raw_notes"
