@@ -1,6 +1,7 @@
 """Research Agent Subgraph."""
 
 import asyncio
+from typing import Literal
 
 from langchain.chat_models import init_chat_model
 from langchain_core.messages import HumanMessage, SystemMessage, ToolMessage, filter_messages
@@ -12,7 +13,14 @@ try:
     from .configuration import Configuration
     from .prompts import COMPRESS_RESEARCH_SIMPLE_HUMAN_MESSAGE, COMPRESS_RESEARCH_SYSTEM_PROMPT
     from .states import ResearcherOutputState, ResearchState, StatesKeys
-    from .utils import execute_tool_safely, get_all_tools, get_today_str, openai_websearch_called
+    from .utils import (
+        execute_tool_safely,
+        get_all_tools,
+        get_today_str,
+        is_token_limit_exceeded,
+        openai_websearch_called,
+        remove_up_to_last_ai_message,
+    )
 except ImportError:
     import rootutils
 
@@ -20,7 +28,14 @@ except ImportError:
     from src.agent.configuration import Configuration
     from src.agent.prompts import COMPRESS_RESEARCH_SIMPLE_HUMAN_MESSAGE, COMPRESS_RESEARCH_SYSTEM_PROMPT
     from src.agent.states import ResearcherOutputState, ResearchState, StatesKeys
-    from src.agent.utils import execute_tool_safely, get_all_tools, get_today_str, openai_websearch_called
+    from src.agent.utils import (
+        execute_tool_safely,
+        get_all_tools,
+        get_today_str,
+        is_token_limit_exceeded,
+        openai_websearch_called,
+        remove_up_to_last_ai_message,
+    )
 
 # Initialize a configurable model that we will use throughout the agent
 configurable_model = init_chat_model(
@@ -28,7 +43,7 @@ configurable_model = init_chat_model(
 )
 
 
-async def research_agent(state: ResearchState, config: RunnableConfig):
+async def research_agent(state: ResearchState, config: RunnableConfig) -> Command["str"]:
     config = Configuration.from_runnable_config(config)
     research_msgs = state.get(StatesKeys.RESEARCH_MSGS.value, [])
     tools = await get_all_tools(config)
@@ -41,7 +56,6 @@ async def research_agent(state: ResearchState, config: RunnableConfig):
         "model": config.research_model,
         "max_tokens": config.research_model_max_tokens,
         # "api_key": config.research_model_api_key,
-        "tags": ["langsmith:nostream"],
     }
 
     research_model = (
@@ -65,7 +79,10 @@ async def research_agent(state: ResearchState, config: RunnableConfig):
     )
 
 
-async def research_tools(state: ResearchState, config: RunnableConfig):
+async def research_tools(
+    state: ResearchState,
+    config: RunnableConfig,
+) -> Command[Literal["compress_research", "research_agent"]]:
     """
     Execute tools and gather results.
 
@@ -115,7 +132,7 @@ async def research_tools(state: ResearchState, config: RunnableConfig):
     return Command(goto="research_agent", update=update)
 
 
-async def compress_research(state: ResearchState, config: RunnableConfig):
+async def compress_research(state: ResearchState, config: RunnableConfig) -> dict[str : str | list[str]]:
     config = Configuration.from_runnable_config(config)
     synthesize_attempts = 0
     compression_model = configurable_model.with_config(
@@ -150,11 +167,10 @@ async def compress_research(state: ResearchState, config: RunnableConfig):
 
             # print(e, traceback.format_exc())
             synthesize_attempts += 1
-            # TODO(@viv): #123 Add token limit check
-            # if is_token_limit_exceeded(e, configurable.research_model):
-            #     researcher_msgs = remove_up_to_last_ai_message(researcher_msgs)
-            #     print(f"Token limit exceeded while synthesizing: {e}. Pruning the messages to try again.")
-            #     continue
+            if is_token_limit_exceeded(e, config.research_model):
+                researcher_msgs = remove_up_to_last_ai_message(researcher_msgs)
+                print(f"Token limit exceeded while synthesizing: {e}. Pruning the messages to try again.")
+                continue
             print(f"Error synthesizing research report: {e}")
     return {
         StatesKeys.COMPRESSED_RESEARCH.value: "Error synthesizing research report: Maximum retries exceeded",
@@ -166,23 +182,9 @@ async def compress_research(state: ResearchState, config: RunnableConfig):
 
 research_builder = StateGraph(ResearchState, output_schema=ResearcherOutputState, config_schema=Configuration)
 research_builder.add_node("research_agent", research_agent)
-research_builder.add_node("compress_research", compress_research)
 research_builder.add_node("research_tools", research_tools)
+research_builder.add_node("compress_research", compress_research)
 
 research_builder.add_edge(START, "research_agent")
 research_builder.add_edge("compress_research", END)
 researcher_subgraph = research_builder.compile(name="Research Agent")
-
-research_brief = """
-How can I develop an agentic AI-powered note-taking application leveraging LangGraph for my personal use, with features including image-to-text conversion, formatting, and integration with Notion, while showcasing my skills? I am seeking to:
-1. Employ a robust Optical Character Recognition (OCR) solution for converting handwritten notes, potentially containing equations and block diagrams, into digital text.
-   - Specific OCR tool preferences are currently open-ended; the research should explore both existing solutions and state-of-the-art alternatives.
-2. Customize LangGraph's prebuilt UI for seamless interaction from a PC without any specific customization specifications, leaving room for creative design choices.
-3. Develop a seamless interface with Notion, utilizing either existing APIs or custom integration methods.
-   - The research should identify the best method for ensuring efficient data management and retrieval in Notion.
-4. Implement a multi-agent system where one agent focuses on image-to-text conversion and another takes charge of text integration and formatting using markdown.
-   - The interaction dynamics between agents require exploration to ensure efficiency and smooth operation.
-5. Deliver an initial MVP capable of converting images to well-formatted text within 2 weeks.
-6. Maintain an open architectural design, allowing flexibility in programming languages and frameworks, as no constraints have been specified.
-7. Enhance the application to demonstrate my capabilities to potential employers, focusing on cutting-edge approach and effective solutions.
-"""

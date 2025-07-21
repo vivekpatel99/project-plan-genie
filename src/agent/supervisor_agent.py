@@ -1,4 +1,4 @@
-"""Superviser Agent Subgraph."""
+"""Supervisor Agent Subgraph."""
 
 import asyncio
 from pathlib import Path
@@ -50,7 +50,7 @@ async def supervisor(state: SupervisorState, config: RunnableConfig) -> Command[
         "model": config.research_model,
         "max_tokens": config.research_model_max_tokens,
         # "api_key": config.research_model_api_key,
-        "tags": ["langsmith:nostream"],
+        # "tags": ["langsmith:nostream"],
     }
 
     lead_research_tool = [ConductResearch, ResearchComplete]

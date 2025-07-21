@@ -4,7 +4,7 @@ from typing import Annotated, Literal
 
 from langchain.chat_models import init_chat_model
 from langchain_core.language_models import BaseChatModel
-from langchain_core.messages import HumanMessage, MessageLikeRepresentation, filter_messages
+from langchain_core.messages import AIMessage, HumanMessage, MessageLikeRepresentation, filter_messages
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import InjectedToolArg, tool
 from tavily import AsyncTavilyClient
@@ -38,7 +38,7 @@ async def tavily_search_sync(
     search_queries,
     max_results: int = 5,
     # topic: Literal["software design", "programming", "technology"] = "programming",
-    topic: Literal["general", "news", "finance"] = "general",  # tavily topic hints
+    topic: Literal["general", "news"] = "general",  # tavily topic hints
     include_raw_content: bool = True,
 ):
     tavily_async_client = AsyncTavilyClient()
@@ -280,6 +280,13 @@ def _check_gemini_token_limit(exception: Exception):
     if is_google_exception and is_resource_exhausted:
         return True
     return "google.api_core.exceptions.resourceexhausted" in exception_type.lower()
+
+
+def remove_up_to_last_ai_message(messages: list[MessageLikeRepresentation]) -> list[MessageLikeRepresentation]:
+    for i in range(len(messages) - 1, -1, -1):
+        if isinstance(messages[i], AIMessage):
+            return messages[:i]  # Return everything up to (but not including) the last AI message
+    return messages
 
 
 # TODO(@viv): fill  out this  -Move to constants 123
