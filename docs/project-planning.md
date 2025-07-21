@@ -19,7 +19,7 @@ Copy and paste the following into a GitHub Issue, Project, or TODO.md file to tr
 
 ### Phase 3: Production Ready
 
-- [ ] Abstract model providers (OpenAI, Anthropic, etc.) using the Strategy Pattern
+- [ ] Abstract model providers (OpenAI, Perplexity, etc.) using the Strategy Pattern
 - [ ] Add robust error handling and retry mechanisms
 - [ ] Optimize token usage (prompt engineering, response caching)
 - [ ] Implement state persistence (save/resume planning sessions)

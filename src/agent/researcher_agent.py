@@ -129,7 +129,7 @@ async def compress_research(state: ResearchState, config: RunnableConfig):
 
     # Update the system prompts to now focus on compression rather than research
     researcher_msgs[0] = SystemMessage(
-        content=COMPRESS_RESEARCH_SYSTEM_PROMPT.format(data=get_today_str()),
+        content=COMPRESS_RESEARCH_SYSTEM_PROMPT.format(date=get_today_str()),
     )
     researcher_msgs.append(HumanMessage(content=COMPRESS_RESEARCH_SIMPLE_HUMAN_MESSAGE))
     while synthesize_attempts < config.compression_attempts:
