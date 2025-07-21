@@ -3,7 +3,8 @@
   "graphs": {
     "clarification_agent_subgraph": "./src/agent/clarification_agent_subgraph.py:clarify_subgraph",
     "researcher_agent_subgraph": "./src/agent/researcher_agent.py:researcher_subgraph",
-    "supervisor_agent_subgraph": "./src/agent/supervisor_agent.py:supervisor_subgraph"
+    "supervisor_agent_subgraph": "./src/agent/supervisor_agent.py:supervisor_subgraph",
+    "agent_graph": "./src/agent/project_planning_agent.py:project_planning_agent"
   },
   "env": ".env"
 

@@ -43,7 +43,10 @@ configurable_model = init_chat_model(
 )
 
 
-async def research_agent(state: ResearchState, config: RunnableConfig) -> Command["str"]:
+async def research_agent(
+    state: ResearchState,
+    config: RunnableConfig,
+) -> Command[Literal["research_tools"]]:
     """
     Research Agent.
 
