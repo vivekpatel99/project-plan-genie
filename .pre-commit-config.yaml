@@ -6,7 +6,6 @@ repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
-      - id: trailing-whitespace
       - id: end-of-file-fixer
       - id: check-docstring-first
       - id: check-yaml
@@ -23,6 +22,11 @@ repos:
     rev: v3.20.0
     hooks:
       - id: pyupgrade
+  # - repo: https://github.com/astral-sh/uv-pre-commit
+  #   # To make sure your uv.lock file is up to date even if your pyproject.toml file was changed
+  #   rev: 0.8.0
+  #   hooks:
+  #     - id: uv-lock
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.12.4
@@ -44,11 +48,6 @@ repos:
     hooks:
       - id: prettier
         types: [yaml]
-
-  # - repo: https://github.com/shellcheck-py/shellcheck-py
-  #   rev: v0.10.0.1
-  #   hooks:
-  #     - id: shellcheck
 
   - repo: https://github.com/executablebooks/mdformat
     rev: 0.7.22

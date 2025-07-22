@@ -4,11 +4,15 @@
     "[python]": {
       "editor.formatOnSave": true,
       "editor.defaultFormatter": "charliermarsh.ruff",
-      "editor.codeActionsOnSave": {
-        "source.fixAll.ruff": "explicit",
-        "source.organizeImports.ruff": "explicit"
-      },
+      // "editor.codeActionsOnSave": {
+      //   "source.fixAll.ruff": "always",
+      //   "source.organizeImports.ruff": "always",
+      // },
+      
     },
+    // ruff settings
+    "ruff.fixAll": true,
+    "ruff.organizeImports": true,
     "python.analysis.autoSearchPaths": true,
     "python.analysis.diagnosticSeverityOverrides": {
         "reportMissingImports": "none"
@@ -18,6 +22,7 @@
         "${workspaceFolder}/notebooks"
     ],
     "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+    // "ruff.configuration": "${workspaceFolder}/.ruff.toml",
     "python.envFile": "${workspaceFolder}/.env",
     "python.terminal.activateEnvironment": true,
     // Test settings
@@ -47,6 +52,7 @@
   "notebook.formatOnSave.enabled": true,
   "notebook.lineNumbers": "on",
   "notebook.scrolling.revealNextCellOnExecute": "none",
+
   "notebook.codeActionsOnSave": {
     "source.organizeImports": "explicit",
     "source.fixAll.pyright": "explicit",

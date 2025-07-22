@@ -39,7 +39,6 @@ indent-width = 4
 # # Specify the target Python version for compatibility checks
 target-version = "py313"
 
-
 lint.extend-select = [
     "E",   # Pycodestyle errors (style issues)
     "W",   # Pycodestyle warnings (style issues)
@@ -120,5 +119,8 @@ lint.ignore = [
     "TD003",  # Missing issue link on TODO
     "FIX002", # Line contains TODO
     "BLE001", # Exception not handled
-    "F401",   # Unused import
+
 ]
+[format]
+# Like Black, use double quotes for strings.
+quote-style = "double"
