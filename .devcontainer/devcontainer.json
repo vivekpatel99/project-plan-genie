@@ -36,7 +36,7 @@
 		}
 	},
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "pip install uv && uv add -r requirements.txt",
+	"postCreateCommand": "pip install uv && uv sync --dev",
 
 	// Configure tool-specific properties.
 	// "customizations": {},

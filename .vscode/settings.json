@@ -49,7 +49,6 @@
   "notebook.scrolling.revealNextCellOnExecute": "none",
   "notebook.codeActionsOnSave": {
     "source.organizeImports": "explicit",
-    "source.fixAll.ruff": "explicit",
     "source.fixAll.pyright": "explicit",
     "source.fixAll.pyreverse": "explicit",
     "source.fixAll.pydocstyle": "explicit",

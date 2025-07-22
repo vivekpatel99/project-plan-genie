@@ -7,6 +7,7 @@ from langchain.chat_models import init_chat_model
 from langchain_core.messages import HumanMessage, SystemMessage, ToolMessage, filter_messages
 from langchain_core.runnables import RunnableConfig
 from langgraph.graph import END, START, StateGraph
+from langgraph.graph.state import CompiledStateGraph
 from langgraph.types import Command
 
 try:
@@ -228,4 +229,6 @@ research_builder.add_node("compress_research", compress_research)
 
 research_builder.add_edge(START, "research_agent")
 research_builder.add_edge("compress_research", END)
-researcher_subgraph = research_builder.compile(name="Research Agent")
+researcher_subgraph: CompiledStateGraph[ResearchState, ResearchState, ResearcherOutputState] = research_builder.compile(
+    name="Research Agent",
+)

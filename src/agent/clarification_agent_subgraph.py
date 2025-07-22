@@ -16,7 +16,8 @@ try:
     from .configuration import Configuration
     from .prompts import CLARIFY_WITH_USER_INSTRUCTIONS, TRANSFORM_MESSAGES_INTO_RESEARCH_TOPIC_PROMPT
     from .states import AgentInputState, AgentState, ClarifyWithUser, ResearchQuestion, StatesKeys
-    from .supervisor_agent import supervisor_subgraph
+
+    # from .supervisor_agent import supervisor_subgraph
     from .utils import get_today_str
 except ImportError:
     import rootutils
@@ -25,7 +26,8 @@ except ImportError:
     from src.agent.configuration import Configuration
     from src.agent.prompts import CLARIFY_WITH_USER_INSTRUCTIONS, TRANSFORM_MESSAGES_INTO_RESEARCH_TOPIC_PROMPT
     from src.agent.states import AgentInputState, AgentState, ClarifyWithUser, ResearchQuestion, StatesKeys
-    from src.agent.supervisor_agent import supervisor_subgraph
+
+    # from src.agent.supervisor_agent import supervisor_subgraph
     from src.agent.utils import get_today_str
 
 # Initialize a configurable model that we will use throughout the agent
@@ -97,7 +99,7 @@ async def clarify_with_user(
     )
 
 
-async def write_research_brief(state: AgentState, config: RunnableConfig) -> Command[Literal["__end__"]]:
+async def write_research_brief(state: AgentState, config: RunnableConfig) -> Command[Literal["supervisor_subgraph"]]:
     """Create the research brief from previous conversations to prepare for research."""
     config = Configuration.from_runnable_config(config)
     research_model_config = {
@@ -121,24 +123,24 @@ async def write_research_brief(state: AgentState, config: RunnableConfig) -> Com
         ],
     )
     return Command(
-        goto=supervisor_subgraph,
+        goto="supervisor_subgraph",
         update={
             StatesKeys.RESEARCH_BRIEF.value: response.research_brief,
         },
     )
 
 
-clarify_builder = StateGraph(
-    AgentState,
-    input_schema=AgentInputState,
-    config_schema=Configuration,
-)
+# clarify_builder = StateGraph(
+#     AgentState,
+#     input_schema=AgentInputState,
+#     config_schema=Configuration,
+# )
 
-clarify_builder.add_node("clarify_with_user", clarify_with_user)
-clarify_builder.add_node("write_research_brief", write_research_brief)
+# clarify_builder.add_node("clarify_with_user", clarify_with_user)
+# clarify_builder.add_node("write_research_brief", write_research_brief)
 
-clarify_builder.add_edge(START, "clarify_with_user")
-# clarify_builder.add_edge("clarify_with_user", "write_research_brief")
-# clarify_builder.add_edge("write_research_brief", END)
+# clarify_builder.add_edge(START, "clarify_with_user")
+# # clarify_builder.add_edge("clarify_with_user", "write_research_brief")
+# # clarify_builder.add_edge("write_research_brief", END)
 
-clarify_subgraph = clarify_builder.compile(name="Clarify with User")
+# clarify_subgraph = clarify_builder.compile(name="Clarify with User")

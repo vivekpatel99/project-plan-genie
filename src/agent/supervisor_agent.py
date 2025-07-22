@@ -1,7 +1,6 @@
 """Supervisor Agent Subgraph."""
 
 import asyncio
-from pathlib import Path
 from typing import Literal
 
 from langchain.chat_models import init_chat_model
@@ -13,6 +12,7 @@ from langgraph.types import Command
 try:
     from .configuration import Configuration
     from .prompts import RESEARCH_SYSTEM_PROMPT
+    from .researcher_agent import researcher_subgraph
     from .states import ConductResearch, ResearchComplete, StatesKeys, SupervisorState
     from .utils import get_notes_from_tool_calls, is_token_limit_exceeded
 except ImportError:
@@ -183,9 +183,9 @@ async def supervisor_tool(state: SupervisorState, config: RunnableConfig) -> Com
         )
 
 
-supervisor_builder = StateGraph(SupervisorState, config_schema=Configuration)
-supervisor_builder.add_node("supervisor", supervisor)
-supervisor_builder.add_node("supervisor_tool", supervisor_tool)
-supervisor_builder.add_edge(START, "supervisor")
-# supervisor_builder.add_edge("supervisor_tool", END)
-supervisor_subgraph = supervisor_builder.compile(name="Supervisor")
+# supervisor_builder = StateGraph(SupervisorState, config_schema=Configuration)
+# supervisor_builder.add_node("supervisor", supervisor)
+# supervisor_builder.add_node("supervisor_tool", supervisor_tool)
+# supervisor_builder.add_edge(START, "supervisor")
+# # supervisor_builder.add_edge("supervisor_tool", END)
+# supervisor_subgraph = supervisor_builder.compile(name="Supervisor")
