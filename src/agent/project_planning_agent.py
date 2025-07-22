@@ -40,7 +40,6 @@ agent_builder.add_node("supervisor_subgraph", supervisor_subgraph)
 agent_builder.add_node("final_report_generation", final_report_generation)
 
 agent_builder.add_edge(START, "clarify_subgraph")
-agent_builder.add_edge("clarify_subgraph", "supervisor_subgraph")
 agent_builder.add_edge("supervisor_subgraph", "final_report_generation")
 agent_builder.add_edge("final_report_generation", END)
 

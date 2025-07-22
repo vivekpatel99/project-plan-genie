@@ -38,7 +38,7 @@ except ImportError:
     )
 
 # Initialize a configurable model that we will use throughout the agent
-configurable_model = init_chat_model(
+researcher_model = init_chat_model(
     configurable_fields=("model", "max_tokens", "api_key"),
 )
 
@@ -77,7 +77,7 @@ async def research_agent(
     }
 
     research_model = (
-        configurable_model.bind_tools(
+        researcher_model.bind_tools(
             tools,
         )
         .with_retry(stop_after_attempt=config.max_structured_output_retries)
@@ -176,7 +176,7 @@ async def compress_research(state: ResearchState, config: RunnableConfig) -> dic
     """
     config = Configuration.from_runnable_config(config)
     synthesize_attempts = 0
-    compression_model = configurable_model.with_config(
+    compression_model = researcher_model.with_config(
         {
             "model": config.compression_model,
             "max_tokens": config.compression_model_max_tokens,

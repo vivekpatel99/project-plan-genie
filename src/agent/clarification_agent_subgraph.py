@@ -16,6 +16,7 @@ try:
     from .configuration import Configuration
     from .prompts import CLARIFY_WITH_USER_INSTRUCTIONS, TRANSFORM_MESSAGES_INTO_RESEARCH_TOPIC_PROMPT
     from .states import AgentInputState, AgentState, ClarifyWithUser, ResearchQuestion, StatesKeys
+    from .supervisor_agent import supervisor_subgraph
     from .utils import get_today_str
 except ImportError:
     import rootutils
@@ -24,10 +25,11 @@ except ImportError:
     from src.agent.configuration import Configuration
     from src.agent.prompts import CLARIFY_WITH_USER_INSTRUCTIONS, TRANSFORM_MESSAGES_INTO_RESEARCH_TOPIC_PROMPT
     from src.agent.states import AgentInputState, AgentState, ClarifyWithUser, ResearchQuestion, StatesKeys
+    from src.agent.supervisor_agent import supervisor_subgraph
     from src.agent.utils import get_today_str
 
 # Initialize a configurable model that we will use throughout the agent
-configurable_model = init_chat_model(
+clarification_model = init_chat_model(
     configurable_fields=("model", "max_tokens", "api_key"),
 )
 
@@ -65,7 +67,7 @@ async def clarify_with_user(
         # "api_key": config.research_model_api_key,
     }
     model = (
-        configurable_model.with_structured_output(ClarifyWithUser)
+        clarification_model.with_structured_output(ClarifyWithUser)
         .with_retry(stop_after_attempt=config.max_structured_output_retries)
         .with_config(model_config)
     )
@@ -104,7 +106,7 @@ async def write_research_brief(state: AgentState, config: RunnableConfig) -> Com
         # "api_key": config.research_model_api_key,
     }
     research_model = (
-        configurable_model.with_structured_output(ResearchQuestion)
+        clarification_model.with_structured_output(ResearchQuestion)
         .with_retry(stop_after_attempt=config.max_structured_output_retries)
         .with_config(research_model_config)
     )
@@ -119,7 +121,7 @@ async def write_research_brief(state: AgentState, config: RunnableConfig) -> Com
         ],
     )
     return Command(
-        goto=END,
+        goto=supervisor_subgraph,
         update={
             StatesKeys.RESEARCH_BRIEF.value: response.research_brief,
         },

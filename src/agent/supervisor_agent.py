@@ -26,7 +26,7 @@ except ImportError:
     from src.agent.utils import get_notes_from_tool_calls, is_token_limit_exceeded
 
 # Initialize a configurable model that we will use throughout the agent
-configurable_model = init_chat_model(
+supervisor_model = init_chat_model(
     configurable_fields=("model", "max_tokens", "api_key"),
 )
 
@@ -55,7 +55,7 @@ async def supervisor(state: SupervisorState, config: RunnableConfig) -> Command[
 
     lead_research_tool = [ConductResearch, ResearchComplete]
     research_model = (
-        configurable_model.bind_tools(lead_research_tool)
+        supervisor_model.bind_tools(lead_research_tool)
         .with_retry(stop_after_attempt=config.max_structured_output_retries)
         .with_config(
             research_model_config,
