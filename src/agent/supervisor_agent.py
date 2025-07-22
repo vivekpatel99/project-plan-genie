@@ -183,9 +183,10 @@ async def supervisor_tool(state: SupervisorState, config: RunnableConfig) -> Com
         )
 
 
-# supervisor_builder = StateGraph(SupervisorState, config_schema=Configuration)
-# supervisor_builder.add_node("supervisor", supervisor)
-# supervisor_builder.add_node("supervisor_tool", supervisor_tool)
-# supervisor_builder.add_edge(START, "supervisor")
-# # supervisor_builder.add_edge("supervisor_tool", END)
-# supervisor_subgraph = supervisor_builder.compile(name="Supervisor")
+if __name__ == "__main__":
+    supervisor_builder = StateGraph(SupervisorState, config_schema=Configuration)
+    supervisor_builder.add_node("supervisor", supervisor)
+    supervisor_builder.add_node("supervisor_tool", supervisor_tool)
+    supervisor_builder.add_edge(START, "supervisor")
+    # supervisor_builder.add_edge("supervisor_tool", END)
+    supervisor_subgraph = supervisor_builder.compile(name="Supervisor")

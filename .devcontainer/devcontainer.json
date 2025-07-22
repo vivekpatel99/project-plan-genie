@@ -15,11 +15,7 @@
 			"extensions": [
 			"charliermarsh.ruff",
 			"codeium.codeium",
-			"github.copilot",
-			"github.copilot-chat",
-			"github.vscode-github-actions",
 			"google.geminicodeassist",
-			"magicstack.magicpython",
 			"mhutchie.git-graph",
 			"ms-python.autopep8",
 			"ms-python.debugpy",
