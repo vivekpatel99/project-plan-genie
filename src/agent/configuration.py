@@ -180,6 +180,27 @@ class Configuration(BaseModel):
             },
         },
     )
+    # --- Final Report Model --------------------------------------------------------------------------
+    final_report_model: str = Field(
+        default="openai:gpt-4.1",
+        metadata={
+            "x_oap_ui_config": {
+                "type": "text",
+                "default": "openai:gpt-4.1",
+                "description": "Model for writing the final report from all research findings",
+            },
+        },
+    )
+    final_report_model_max_tokens: int = Field(
+        default=10000,
+        metadata={
+            "x_oap_ui_config": {
+                "type": "number",
+                "default": 10000,
+                "description": "Maximum output tokens for final report model",
+            },
+        },
+    )
 
     @classmethod
     def from_runnable_config(
