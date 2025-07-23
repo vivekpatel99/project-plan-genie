@@ -8,6 +8,7 @@ from langchain_core.messages import HumanMessage, SystemMessage, ToolMessage
 from langchain_core.runnables import RunnableConfig
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import Command
+from loguru import logger
 
 try:
     from .configuration import Configuration
@@ -45,13 +46,16 @@ async def supervisor(state: SupervisorState, config: RunnableConfig) -> Command[
     2. The number of research iterations exceeds the maximum number of
        iterations specified in the configuration.
     """
+    logger.info("Supervisor agent invoked.")
     config = Configuration.from_runnable_config(config)
+    logger.debug("Configuration for supervisor: {}", config)
     research_model_config = {
         "model": config.research_model,
         "max_tokens": config.research_model_max_tokens,
         # "api_key": config.research_model_api_key,
         # "tags": ["langsmith:nostream"],
     }
+    logger.debug("Model configuration for supervisor: {}", research_model_config)
 
     lead_research_tool = [ConductResearch, ResearchComplete]
     research_model = (
@@ -63,6 +67,8 @@ async def supervisor(state: SupervisorState, config: RunnableConfig) -> Command[
     )
     supervisor_message = state.get(StatesKeys.SUPERVISOR_MSGS.value, [])
     response = await research_model.ainvoke(supervisor_message)
+    logger.debug("Supervisor response: {}", response)
+    logger.info("going to supervisor_tool")
     return Command(
         goto="supervisor_tool",
         update={
@@ -72,6 +78,7 @@ async def supervisor(state: SupervisorState, config: RunnableConfig) -> Command[
     )
 
 
+@logger.catch
 async def supervisor_tool(state: SupervisorState, config: RunnableConfig) -> Command[Literal["supervisor", "__end__"]]:
     """
     Supervisor tool.
@@ -91,7 +98,9 @@ async def supervisor_tool(state: SupervisorState, config: RunnableConfig) -> Com
 
     If there is an error in the reflection phase, then we go to __end__.
     """
+    logger.info("Supervisor tool invoked.")
     configurable = Configuration.from_runnable_config(config)
+    logger.debug("Configuration for supervisor tool: {}", configurable)
     supervisor_messages = state.get(StatesKeys.SUPERVISOR_MSGS.value, [])
     research_iterations = state.get(StatesKeys.RESEARCH_ITERATIONS.value, 0)
     most_recent_message = supervisor_messages[-1]
@@ -106,6 +115,7 @@ async def supervisor_tool(state: SupervisorState, config: RunnableConfig) -> Com
         tool_call["name"] == "ResearchComplete" for tool_call in most_recent_message.tool_calls
     )
     if exceeded_allowed_iterations or no_tool_calls or research_complete_tool_call:
+        logger.info("exceeded_allowed_iterations or no_tool_calls or research_complete_tool_call")
         return Command(
             goto=END,
             update={
@@ -114,6 +124,7 @@ async def supervisor_tool(state: SupervisorState, config: RunnableConfig) -> Com
             },
         )
     # otherwise, continue with research
+    logger.info("Continuing with research...")
     try:
         all_conduct_research = [
             tool_call for tool_call in most_recent_message.tool_calls if tool_call["name"] == "ConductResearch"
@@ -159,6 +170,8 @@ async def supervisor_tool(state: SupervisorState, config: RunnableConfig) -> Com
         raw_notes_concat = "\n".join(
             ["\n".join(observation.get(StatesKeys.RAW_NOTES.value, [])) for observation in tool_results],
         )
+        logger.debug("raw_notes_concat: {}", raw_notes_concat)
+        logger.info("Returning to supervisor with tool results.")
         return Command(
             goto="supervisor",
             update={
@@ -167,13 +180,11 @@ async def supervisor_tool(state: SupervisorState, config: RunnableConfig) -> Com
             },
         )
     except Exception as e:
-        # import traceback
-
-        # print(traceback.format_exc())
         if is_token_limit_exceeded(e, configurable.research_model):
-            print(f"Token limit exceeded while reflecting: {e}")
+            logger.error(f"Token limit exceeded while reflecting: {e}")
         else:
-            print(f"Other error in reflection phase: {e}")
+            logger.error(f"Other error in reflection phase: {e}")
+        logger.info("Returning to end state due to error in reflection phase.")
         return Command(
             goto=END,
             update={
@@ -183,8 +194,10 @@ async def supervisor_tool(state: SupervisorState, config: RunnableConfig) -> Com
         )
 
 
+logger.info("Supervisor agent subgraph initialized.")
 supervisor_builder = StateGraph(SupervisorState, config_schema=Configuration)
 supervisor_builder.add_node("supervisor", supervisor)
 supervisor_builder.add_node("supervisor_tool", supervisor_tool)
 supervisor_builder.add_edge(START, "supervisor")
 supervisor_subgraph = supervisor_builder.compile(name="Supervisor")
+logger.info("Supervisor agent subgraph compiled.")

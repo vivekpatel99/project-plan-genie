@@ -11,6 +11,7 @@ from langchain_core.messages import (
 from langchain_core.runnables import RunnableConfig
 from langgraph.graph import END
 from langgraph.types import Command
+from loguru import logger
 
 try:
     from .configuration import Configuration
@@ -57,8 +58,9 @@ async def clarify_with_user(
         or proceeding to write the research brief.
 
     """
+    logger.info("Clarifying with user...")
     config = Configuration.from_runnable_config(config)
-
+    logger.debug("Configuration for clarification: {}", config)
     if not config.allow_clarification:
         return Command(goto="write_research_brief")
 
@@ -68,6 +70,7 @@ async def clarify_with_user(
         "max_tokens": config.research_model_max_tokens,
         # "api_key": config.research_model_api_key,
     }
+    logger.debug("Model configuration for clarification: {}", model_config)
     model = (
         clarification_model.with_structured_output(ClarifyWithUser)
         .with_retry(stop_after_attempt=config.max_structured_output_retries)
@@ -84,13 +87,14 @@ async def clarify_with_user(
         ],
     )
     if response.need_clarification:
+        logger.info("User needs clarification.")
         return Command(
             goto=END,
             update={
                 StatesKeys.MSGS.value: [*messages, AIMessage(content=response.question)],
             },
         )
-
+    logger.info("Clarification complete, proceeding to write research brief.")
     return Command(
         goto="write_research_brief",
         update={
@@ -101,7 +105,9 @@ async def clarify_with_user(
 
 async def write_research_brief(state: AgentState, config: RunnableConfig) -> Command[Literal["supervisor_subgraph"]]:
     """Create the research brief from previous conversations to prepare for research."""
+    logger.info("Writing research brief...")
     config = Configuration.from_runnable_config(config)
+    logger.debug("Configuration for writing research brief: {}", config)
     research_model_config = {
         "model": config.research_model,
         "max_tokens": config.research_model_max_tokens,
@@ -122,6 +128,8 @@ async def write_research_brief(state: AgentState, config: RunnableConfig) -> Com
             ),
         ],
     )
+    logger.debug("Research brief created: {}", response.research_brief)
+    logger.info("Proceeding to supervisor subgraph for further processing.")
     return Command(
         goto="supervisor_subgraph",
         update={

@@ -1,4 +1,7 @@
+import sys
+
 from langgraph.graph import END, START, StateGraph
+from loguru import logger
 
 try:
     from .clarification_agent_subgraph import clarify_with_user, write_research_brief
@@ -28,7 +31,8 @@ except ImportError:
     )
     from src.agent.supervisor_agent import supervisor, supervisor_tool
 
-
+logger.add(sys.stdout, level="INFO", colorize=True, backtrace=True, diagnose=True)
+logger.info("Initializing Project Planning Genie...")
 supervisor_builder = StateGraph(SupervisorState, config_schema=Configuration)
 supervisor_builder.add_node("supervisor", supervisor)
 supervisor_builder.add_node("supervisor_tool", supervisor_tool)
@@ -52,5 +56,5 @@ agent_builder.add_edge(
     "final_report_generation",
 )
 agent_builder.add_edge("final_report_generation", END)
-
+logger.info("Compiling Project Planning Genie...")
 project_planning_genie = agent_builder.compile(name="Project Planning Genie")

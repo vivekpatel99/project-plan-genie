@@ -9,6 +9,7 @@ from langchain_core.runnables import RunnableConfig
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.types import Command
+from loguru import logger
 
 try:
     from .configuration import Configuration
@@ -63,12 +64,15 @@ async def research_agent(
     2. The number of research iterations exceeds the maximum number of
        iterations specified in the configuration.
     """
+    logger.info("Research agent invoked.")
     config = Configuration.from_runnable_config(config)
+    logger.debug("Configuration for research agent: {}", config)
     research_msgs = state.get(StatesKeys.RESEARCH_MSGS.value, [])
     tools = await get_all_tools(config)
 
     if len(tools) <= 1:  # ResearchComplete is default tool in the list
         msg = "No tools found to conduct research, please configure Search API"
+        logger.error(msg)
         raise ValueError(msg)
 
     research_model_config = {
@@ -88,7 +92,7 @@ async def research_agent(
     response = await research_model.ainvoke(
         research_msgs,
     )
-
+    logger.debug("Research agent response: {}", response)
     return Command(
         goto="research_tools",
         update={
@@ -110,12 +114,15 @@ async def research_tools(
     If we have exceeded our max guardrail tool call iterations or the most recent message contains ResearchComplete tool call, then go to compress_research.
     Otherwise, go back to research_agent.
     """
+    logger.info("Executing research tools...")
     config = Configuration.from_runnable_config(config)
+    logger.debug("Configuration for research tools: {}", config)
     research_msgs = state.get(StatesKeys.RESEARCH_MSGS.value, [])
     most_recent_message = research_msgs[-1]
 
     # Early exit Criteria: No tools calls (or native web search calls) were made by the researcher
     if not most_recent_message.tool_calls and not openai_websearch_called(most_recent_message):
+        logger.info("No tools calls were made, going to compress_research")
         return Command(goto="compress_research")
 
     # Otherwise, execute tools and gather results
@@ -144,13 +151,16 @@ async def research_tools(
     if state.get(StatesKeys.TOOL_CALL_ITERATIONS.value, 0) >= config.max_react_tool_calls or any(
         tool_call["name"] == "ResearchComplete" for tool_call in tool_calls
     ):
+        logger.info("Exiting to compress_research due to max tool call iterations or ResearchComplete tool call.")
         return Command(
             goto="compress_research",
             update=update,
         )
+    logger.info("Continuing to research_agent for more iterations.")
     return Command(goto="research_agent", update=update)
 
 
+@logger.catch
 async def compress_research(state: ResearchState, config: RunnableConfig) -> dict[str : str | list[str]]:
     """
     Compress research messages into a concise report.
@@ -175,7 +185,9 @@ async def compress_research(state: ResearchState, config: RunnableConfig) -> dic
         research content and raw notes, or an error message if synthesis fails.
 
     """
+    logger.info("Compressing research...")
     config = Configuration.from_runnable_config(config)
+    logger.debug("Configuration for compression: {}", config)
     synthesize_attempts = 0
     compression_model = researcher_model.with_config(
         {
@@ -204,16 +216,15 @@ async def compress_research(state: ResearchState, config: RunnableConfig) -> dic
                     ),
                 ],
             }
+            logger.debug("Research brief created: {}", response.research_brief)
         except Exception as e:
-            # import traceback
-
-            # print(e, traceback.format_exc())
             synthesize_attempts += 1
             if is_token_limit_exceeded(e, config.research_model):
                 researcher_msgs = remove_up_to_last_ai_message(researcher_msgs)
-                print(f"Token limit exceeded while synthesizing: {e}. Pruning the messages to try again.")
+                logger.warning("Token limit exceeded while synthesizing: {}. Pruning the messages to try again.", e)
                 continue
-            print(f"Error synthesizing research report: {e}")
+            logger.error("Error synthesizing research report: {}", e)
+    logger.error("Error synthesizing research report: Maximum retries exceeded")
     return {
         StatesKeys.COMPRESSED_RESEARCH.value: "Error synthesizing research report: Maximum retries exceeded",
         StatesKeys.RAW_NOTES.value: [
@@ -222,6 +233,7 @@ async def compress_research(state: ResearchState, config: RunnableConfig) -> dic
     }
 
 
+logger.info("Research agent subgraph initialized.")
 research_builder = StateGraph(ResearchState, output_schema=ResearcherOutputState, config_schema=Configuration)
 research_builder.add_node("research_agent", research_agent)
 research_builder.add_node("research_tools", research_tools)
@@ -232,3 +244,4 @@ research_builder.add_edge("compress_research", END)
 researcher_subgraph: CompiledStateGraph[ResearchState, ResearchState, ResearcherOutputState] = research_builder.compile(
     name="Research Agent",
 )
+logger.info("Research agent subgraph compiled.")

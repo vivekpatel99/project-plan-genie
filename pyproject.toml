@@ -38,6 +38,7 @@ dependencies = [
     "ipykernel>=6.29.5",
     "langchain-perplexity>=0.1.1",
     "python-box>=7.3.2",
+    "loguru>=0.7.3",
 ]
 
 [project.optional-dependencies]
