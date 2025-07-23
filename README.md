@@ -9,7 +9,7 @@ This project planning agent helps developers and teams break down complex projec
 **Key Features:**
 
 - **Intelligent Project Analysis**: Automatically decomposes project descriptions into actionable tasks
-- **Multi-Agent Architecture**: Specialized agents for clarification, planning, and validation
+- **Multi-Agent Architecture**: Specialized agents for clarification, planning (supervisor and researcher), and report generation
 - **Markdown Report Generation**: Outputs formatted plans ready for GitHub issues
 - **Extensible Design**: Built with modern software engineering patterns for easy enhancement
 
@@ -23,22 +23,22 @@ This project planning agent helps developers and teams break down complex projec
 
 ## 🏗️ Architecture
 
+![Architecture Diagram](assets/final_graph.png)
+
 ### Core Components
 
 - **LangGraph StateGraph**: Orchestrates the multi-agent workflow
-- **Planning Agent**: Main logic for project decomposition
 - **Clarification Agent**: Handles requirement gathering and question generation
-- **Validation Agent**: Reviews and optimizes generated plans
-- **CLI Interface**: Command-line tool for easy testing and interaction
+- **Supervisor Agent**: Reviews conversation and orchestrates research Agents
+- **Research Agent**: Conducts in-depth research and analysis to support planning
+- **Report Generation Agent**: Formats the final output into markdown
 
 ## 🛠️ Technology Stack
 
 - **Framework**: LangGraph for agent orchestration
 - **Language**: Python 3.8+
 - **AI Models**: OpenAI GPT, Perplexity, and other LLM providers
-- **CLI**: argparse/click for command-line interface
 - **Testing**: pytest for unit and integration tests
-- **Documentation**: Sphinx for API documentation
 
 ## 🎨 Project Structure
 
@@ -52,32 +52,53 @@ This project planning agent helps developers and teams break down complex projec
 
 ### Quick Start
 
-## 🎯 Use Cases
+1. **Clone the repository:**
 
-- **Solo Developers**: Break down personal project ideas into manageable tasks
-- **Development Teams**: Create structured project roadmaps for team collaboration
-- **Product Managers**: Generate technical implementation plans from feature requests
-- **Students**: Learn project planning by seeing AI-generated breakdowns
-- **Portfolio Building**: Create well-documented GitHub issues for showcase projects
+   ```bash
+   https://github.com/vivekpatel99/project-planning-genie.git
+   cd project-planning-genie
+   ```
+
+2. **Create and Activate Virtual Environment (using `uv`)/Setup Project Environment:**
+
+   *First, ensure you have `uv` installed. If not, follow the instructions here.*
+
+   ```bash
+   # uv will create a virtual environment named .venv and install dependencies
+   uv sync
+   ```
+
+3. **Set up Environment Variables:**
+
+   - **`.env` file (Recommended for Local Development)**
+
+     - Create a `.env` file in the project root.
+     - Add your credentials and configurations:
+
+     ```dotenv
+        # .env
+        TAVILY_API_KEY=
+        LANGCHAIN_API_KEY=
+        OPENAI_API_KEY=
+
+        LANGSMITH_PROJECT=
+        LANGCHAIN_TRACING_V2=true
+     ```
+
+     - add following line to your vs code settings.json to automatically load the `.env` file:
+
+     ```json
+     "python.envFile": "${workspaceFolder}/.env"
+     ```
 
 ## 🔮 Future Enhancements
 
-- **Multi-modal Input**: Support for voice commands and document uploads
-- **Visual Timelines**: Generate Gantt charts and project visualizations
-- **Tool Integration**: Connect with GitHub, Jira, Trello, and other platforms
+- **GitHub Integration**: Automatically create issues and pull requests from generated plans
+- **User Feedback Loop**: Incorporate user feedback to improve task generation
 - **Performance Analytics**: Track token usage, response times, and accuracy metrics
-- **Collaborative Features**: Multi-user planning and real-time collaboration
-
-## 📚 Documentation
-
-- [Installation Guide](docs/installation.md)
-- [Usage Examples](docs/examples.md)
-- [API Reference](docs/api.md)
-- [Contributing Guidelines](CONTRIBUTING.md)
-- [Architecture Decisions](docs/adr/)
 
 ## 📚 Reference
 
 1. [open_deep_research](https://github.com/langchain-ai/open_deep_research/tree/main)
-2. [pen Deep Research-Youtube](https://www.youtube.com/watch?v=agGiWUpxkhg)
+2. [Open Deep Research-Youtube](https://www.youtube.com/watch?v=agGiWUpxkhg)
 3. [LangGraph](https://github.com/langchain-ai/langgraph)
