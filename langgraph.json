@@ -3,7 +3,7 @@
   "graphs": {
     "supervisor_agent_subgraph": "./src/agent/supervisor_agent.py:supervisor_subgraph",
     "researcher_agent": "./src/agent/researcher_agent.py:researcher_subgraph",
-    "agent_graph": "./src/agent/project_planning_agent.py:project_planning_agent"
+    "agent_graph": "./src/agent/project_planning_genie.py:project_planning_genie"
   },
   "env": ".env"
 

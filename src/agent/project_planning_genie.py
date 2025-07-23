@@ -53,4 +53,4 @@ agent_builder.add_edge(
 )
 agent_builder.add_edge("final_report_generation", END)
 
-project_planning_agent = agent_builder.compile(name="Project Planning Agent")
+project_planning_genie = agent_builder.compile(name="Project Planning Genie")
