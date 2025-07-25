@@ -1,4 +1,5 @@
 import sys
+from pathlib import Path
 
 from langgraph.graph import END, START, StateGraph
 from loguru import logger
@@ -34,7 +35,13 @@ except ImportError:
 config = {
     "handlers": [
         {"sink": sys.stdout, "level": "ERROR", "colorize": True},
-        {"sink": "file.log", "enqueue": True, "level": "DEBUG", "rotation": "1 MB", "compression": "zip"},
+        {
+            "sink": f"{Path.cwd().parent.parent / f'{__name__}.log'}",
+            "enqueue": True,
+            "level": "DEBUG",
+            "rotation": "10 MB",
+            "compression": "zip",
+        },
     ],
 }
 logger.configure(**config)

@@ -27,8 +27,9 @@
     "python.terminal.activateEnvironment": true,
     // Test settings
     "python.testing.pytestEnabled": true,
+    "python.analysis.enablePytestSupport": true,
     "python.testing.unittestEnabled": false,
-    "python.testing.cwd": "${workspaceFolder}/tests",
+    "python.testing.cwd": "${workspaceFolder}",
     "python.testing.pytestPath": ".venv/bin/python",
     "python.testing.autoTestDiscoverOnSaveEnabled": true,
     "python.analysis.typeCheckingMode": "off", // Disable Pylance Checking so MyPy Extension is only used
@@ -47,13 +48,22 @@
     ".python-version":true,
     "**.langgraph_api": true
   },
+  
+  "python.testing.pytestArgs": [
+      "--verbose",
+      // "tests/unit_tests",
+      // "--rootdir=${workspaceFolder}"
+  ],
+
+
+  // MyPy settings
+  "mypy.runUsingActiveInterpreter": true,
   // Notebook settings
   "notebook.output.scrolling": true,
   "notebook.formatOnSave.enabled": true,
   "notebook.lineNumbers": "on",
   "notebook.scrolling.revealNextCellOnExecute": "none",
   "mypy.checkNotebooks": false,
-  "mypy.runUsingActiveInterpreter": true,
   
   "notebook.codeActionsOnSave": {
     "source.organizeImports": "explicit",

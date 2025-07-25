@@ -115,7 +115,6 @@ async def write_research_brief(state: AgentState, config: RunnableConfig) -> Com
     research_model_config = {
         "model": config.research_model,
         "max_tokens": config.research_model_max_tokens,
-        # "api_key": config.research_model_api_key,
     }
     research_model = (
         clarification_model.with_structured_output(ResearchQuestion)

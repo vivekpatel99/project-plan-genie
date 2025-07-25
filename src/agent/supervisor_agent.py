@@ -52,8 +52,6 @@ async def supervisor(state: SupervisorState, config: RunnableConfig) -> Command[
     research_model_config = {
         "model": config.research_model,
         "max_tokens": config.research_model_max_tokens,
-        # "api_key": config.research_model_api_key,
-        # "tags": ["langsmith:nostream"],
     }
     logger.debug("Model configuration for supervisor: {}", research_model_config)
 
