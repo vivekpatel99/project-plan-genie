@@ -52,7 +52,9 @@
   "notebook.formatOnSave.enabled": true,
   "notebook.lineNumbers": "on",
   "notebook.scrolling.revealNextCellOnExecute": "none",
-
+  "mypy.checkNotebooks": false,
+  "mypy.runUsingActiveInterpreter": true,
+  
   "notebook.codeActionsOnSave": {
     "source.organizeImports": "explicit",
     "source.fixAll.pyright": "explicit",

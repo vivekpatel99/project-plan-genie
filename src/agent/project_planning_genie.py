@@ -30,6 +30,7 @@ except ImportError:
         SupervisorState,
     )
     from src.agent.supervisor_agent import supervisor, supervisor_tool
+
 config = {
     "handlers": [
         {"sink": sys.stdout, "level": "ERROR", "colorize": True},
@@ -37,7 +38,7 @@ config = {
     ],
 }
 logger.configure(**config)
-# logger.add([sys.stdout, f"{__file__}.log"], level="INFO", colorize=True, backtrace=True, diagnose=True, enqueue=True)
+
 logger.info("Initializing Project Planning Genie...")
 supervisor_builder = StateGraph(SupervisorState, config_schema=Configuration)
 supervisor_builder.add_node("supervisor", supervisor)

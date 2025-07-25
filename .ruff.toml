@@ -29,7 +29,7 @@ exclude = [
     "node_modules",
     "site-packages",
     "venv",
-    # "*.ipynb"
+    ".ipynb",
 ]
 
 # # Set line length consistent with Black

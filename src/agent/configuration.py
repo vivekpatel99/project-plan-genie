@@ -23,6 +23,7 @@ class Defaults(Enum):
     RESEARCH_MODEL: str = "openai:gpt-4o"
     COMPRESSION_MODEL: str = "openai:gpt-4o-mini"
     SUMMARIZATION_MODEL: str = "openai:gpt-4o-mini"
+    FINAL_REPORT_GENERATION_MODEL: str = "openai:gpt-4.1"
     SEARCH_API: SearchAPI = SearchAPI.TAVILY
 
 
@@ -181,8 +182,8 @@ class Configuration(BaseModel):
         },
     )
     # --- Final Report Model --------------------------------------------------------------------------
-    final_report_model: str = Field(
-        default="openai:gpt-4.1",
+    final_report_generation_model: str = Field(
+        default=Defaults.FINAL_REPORT_GENERATION_MODEL.value,
         metadata={
             "x_oap_ui_config": {
                 "type": "text",
@@ -191,7 +192,7 @@ class Configuration(BaseModel):
             },
         },
     )
-    final_report_model_max_tokens: int = Field(
+    final_report_generation_model_max_tokens: int = Field(
         default=10000,
         metadata={
             "x_oap_ui_config": {

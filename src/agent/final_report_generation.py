@@ -17,7 +17,7 @@ except ImportError:
 
 async def final_report_generation(state: AgentState, config: RunnableConfig) -> dict[str, str]:
     """
-    Generate final report from the  research notes and fidings.
+    Generate final report from the  research notes and findings.
 
     Takes in a state and config and generates a final report by calling
     the report generator model. If the model fails to generate a report, it retries
@@ -31,8 +31,8 @@ async def final_report_generation(state: AgentState, config: RunnableConfig) -> 
     notes = state.get(StatesKeys.NOTES.value, [])
     config = Configuration.from_runnable_config(config)
     report_generator_config = {
-        "model": config.report_generator_model,
-        "max_tokens": config.report_generator,
+        "model": config.final_report_generation_model,
+        "max_tokens": config.final_report_generation_model_max_tokens,
     }
     findings = "\n".join(notes)
     max_retries = 3
