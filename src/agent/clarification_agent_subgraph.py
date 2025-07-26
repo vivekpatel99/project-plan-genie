@@ -3,11 +3,7 @@
 from typing import Literal
 
 from langchain.chat_models import init_chat_model
-from langchain_core.messages import (
-    AIMessage,
-    HumanMessage,
-    get_buffer_string,
-)
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, get_buffer_string
 from langchain_core.runnables import RunnableConfig
 from langgraph.graph import END
 from langgraph.types import Command
@@ -15,7 +11,11 @@ from loguru import logger
 
 try:
     from .configuration import Configuration
-    from .prompts import CLARIFY_WITH_USER_INSTRUCTIONS, TRANSFORM_MESSAGES_INTO_RESEARCH_TOPIC_PROMPT
+    from .prompts import (
+        CLARIFY_WITH_USER_INSTRUCTIONS,
+        LEAD_RESEARCHER_PROMPT,
+        TRANSFORM_MESSAGES_INTO_RESEARCH_TOPIC_PROMPT,
+    )
     from .states import AgentState, ClarifyWithUser, ResearchQuestion, StatesKeys
 
     # from .supervisor_agent import supervisor_subgraph
@@ -25,7 +25,11 @@ except ImportError:
 
     rootutils.setup_root(__file__, indicator=".git", pythonpath=True)
     from src.agent.configuration import Configuration
-    from src.agent.prompts import CLARIFY_WITH_USER_INSTRUCTIONS, TRANSFORM_MESSAGES_INTO_RESEARCH_TOPIC_PROMPT
+    from src.agent.prompts import (
+        CLARIFY_WITH_USER_INSTRUCTIONS,
+        LEAD_RESEARCHER_PROMPT,
+        TRANSFORM_MESSAGES_INTO_RESEARCH_TOPIC_PROMPT,
+    )
     from src.agent.states import AgentState, ClarifyWithUser, ResearchQuestion, StatesKeys
 
     # from src.agent.supervisor_agent import supervisor_subgraph
@@ -111,7 +115,6 @@ async def write_research_brief(state: AgentState, config: RunnableConfig) -> Com
     research_model_config = {
         "model": config.research_model,
         "max_tokens": config.research_model_max_tokens,
-        # "api_key": config.research_model_api_key,
     }
     research_model = (
         clarification_model.with_structured_output(ResearchQuestion)
@@ -134,6 +137,15 @@ async def write_research_brief(state: AgentState, config: RunnableConfig) -> Com
         goto="supervisor_subgraph",
         update={
             StatesKeys.RESEARCH_BRIEF.value: response.research_brief,
+            StatesKeys.SUPERVISOR_MSGS.value: [
+                SystemMessage(
+                    content=LEAD_RESEARCHER_PROMPT.format(
+                        date=get_today_str(),
+                        max_concurrent_research_units=config.max_concurrent_research_units,
+                    ),
+                ),
+                HumanMessage(content=response.research_brief),
+            ],
         },
     )
 

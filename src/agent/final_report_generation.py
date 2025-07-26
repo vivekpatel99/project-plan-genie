@@ -1,6 +1,9 @@
+import asyncio
+
 from langchain.chat_models import init_chat_model
 from langchain_core.messages import HumanMessage
 from langchain_core.runnables import RunnableConfig
+from loguru import logger
 
 try:
     from .configuration import Configuration
@@ -12,12 +15,14 @@ except ImportError:
 
     rootutils.setup_root(__file__, indicator=".git", pythonpath=True)
     from src.agent.prompts import SYSTEM_PROMPT_PROJECT_PLAN_STRUCTURE
-    from src.agent.states import AgentState
+    from src.agent.states import AgentState, StatesKeys
+    from src.agent.utils import get_today_str
 
 
+@logger.catch
 async def final_report_generation(state: AgentState, config: RunnableConfig) -> dict[str, str]:
     """
-    Generate final report from the  research notes and fidings.
+    Generate final report from the  research notes and findings.
 
     Takes in a state and config and generates a final report by calling
     the report generator model. If the model fails to generate a report, it retries
@@ -31,8 +36,8 @@ async def final_report_generation(state: AgentState, config: RunnableConfig) -> 
     notes = state.get(StatesKeys.NOTES.value, [])
     config = Configuration.from_runnable_config(config)
     report_generator_config = {
-        "model": config.report_generator_model,
-        "max_tokens": config.report_generator,
+        "model": config.final_report_generation_model,
+        "max_tokens": config.final_report_generation_model_max_tokens,
     }
     findings = "\n".join(notes)
     max_retries = 3
@@ -53,9 +58,12 @@ async def final_report_generation(state: AgentState, config: RunnableConfig) -> 
                 StatesKeys.MSGS.value: [HumanMessage(content=final_report.content)],
             }
         except Exception as e:
-            return {
-                StatesKeys.FINAL_REPORT.value: f"Error generating final report: {e}",
-            }
+            last_exception = e
+            current_retry += 1
+            logger.warning(f"Attempt {current_retry} to generate report failed: {e}")
+            if current_retry <= max_retries:
+                await asyncio.sleep(0.1)  # Small delay before retrying
+
     return {
-        StatesKeys.FINAL_REPORT.value: "Error generating final report: Maximum retries exceeded",
+        StatesKeys.FINAL_REPORT.value: f"Error generating final report: Maximum retries exceeded, Last error: {last_exception}",
     }

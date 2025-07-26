@@ -1,4 +1,5 @@
 import sys
+from pathlib import Path
 
 from langgraph.graph import END, START, StateGraph
 from loguru import logger
@@ -30,14 +31,21 @@ except ImportError:
         SupervisorState,
     )
     from src.agent.supervisor_agent import supervisor, supervisor_tool
+
 config = {
     "handlers": [
         {"sink": sys.stdout, "level": "ERROR", "colorize": True},
-        {"sink": "file.log", "enqueue": True, "level": "DEBUG", "rotation": "1 MB", "compression": "zip"},
+        {
+            "sink": f"{Path.cwd().parent.parent / f'{__name__}.log'}",
+            "enqueue": True,
+            "level": "DEBUG",
+            "rotation": "10 MB",
+            "compression": "zip",
+        },
     ],
 }
 logger.configure(**config)
-# logger.add([sys.stdout, f"{__file__}.log"], level="INFO", colorize=True, backtrace=True, diagnose=True, enqueue=True)
+
 logger.info("Initializing Project Planning Genie...")
 supervisor_builder = StateGraph(SupervisorState, config_schema=Configuration)
 supervisor_builder.add_node("supervisor", supervisor)
