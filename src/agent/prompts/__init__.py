@@ -1,5 +1,13 @@
 """Default prompts used in this project."""
 
+from pathlib import Path
+
+
+def read_prompt(file_name: str, prompt_dir: Path = Path(__file__).parent) -> str:
+    prompt_file = prompt_dir / f"{file_name}.md"
+    return prompt_file.read_text()
+
+
 PLANNING_AGENT_SYSTEM_PROMPT = """
 # Enterprise Software Project Planning AI Agent
 
@@ -223,25 +231,22 @@ Your planning is successful when:
 
 Now, when given any project request, apply this comprehensive framework to create detailed, actionable implementation plans that embody software engineering excellence.
  """
-SYSTEM_PROMPT_PROJECT_PLAN_STRUCTURE = """
-"""
+
+SYSTEM_PROMPT_PROJECT_PLAN_STRUCTURE = read_prompt(file_name="project_plan_structure_system_prompts")
 
 
 #######################################################
-SUMMARIZE_WEBPAGE_PROMPT = """"""
+SUMMARIZE_WEBPAGE_PROMPT = read_prompt(file_name="summarize_webpage")
 
-COMPRESS_RESEARCH_SYSTEM_PROMPT = """Y"""
+COMPRESS_RESEARCH_SYSTEM_PROMPT = read_prompt(file_name="compress_research_system_prompt")
+
 
 COMPRESS_RESEARCH_SIMPLE_HUMAN_MESSAGE = """All above messages are about research conducted by an AI Researcher. Please clean up these findings.
 DO NOT summarize the information. I want the raw information returned, just in a cleaner format. Make sure all relevant information is preserved - you can rewrite findings verbatim."""
 
-RESEARCH_SYSTEM_PROMPT = """
-"""
+RESEARCH_SYSTEM_PROMPT = read_prompt(file_name="research_system_prompt")
 
-CLARIFY_WITH_USER_INSTRUCTIONS = """
-
-"""
+CLARIFY_WITH_USER_INSTRUCTIONS = read_prompt(file_name="clarify_with_user_system_prompt")
 
 
-TRANSFORM_MESSAGES_INTO_RESEARCH_TOPIC_PROMPT = """
-"""
+TRANSFORM_MESSAGES_INTO_RESEARCH_TOPIC_PROMPT = read_prompt(file_name="transform_messages_into_research_topic_prompt")
