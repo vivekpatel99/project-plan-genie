@@ -30,6 +30,7 @@ exclude = [
     "site-packages",
     "venv",
     ".ipynb",
+    "tests",
 ]
 
 # # Set line length consistent with Black
