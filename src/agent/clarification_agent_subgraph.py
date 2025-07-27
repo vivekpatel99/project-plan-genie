@@ -37,7 +37,7 @@ except ImportError:
 
 # Initialize a configurable model that we will use throughout the agent
 clarification_model = init_chat_model(
-    configurable_fields=("model", "max_tokens", "api_key"),
+    configurable_fields=("model", "max_tokens", "model_provider"),
 )
 
 
@@ -70,9 +70,9 @@ async def clarify_with_user(
 
     messages = state[StatesKeys.MSGS.value]
     model_config = {
-        "model": config.research_model,
-        "max_tokens": config.research_model_max_tokens,
-        # "api_key": config.research_model_api_key,
+        "model": config.clarification_model,
+        "max_tokens": config.clarification_model_max_tokens,
+        # "api_key": config.clarification_model_api_key,
     }
     logger.debug("Model configuration for clarification: {}", model_config)
     model = (

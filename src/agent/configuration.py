@@ -20,6 +20,7 @@ class SearchAPI(Enum):
 class Defaults(Enum):
     """all Defaults settings."""
 
+    CLARIFICATION_MODEL: str = "openai:gpt-4.1"
     RESEARCH_MODEL: str = "openai:gpt-4o"
     COMPRESSION_MODEL: str = "openai:gpt-4o-mini"
     SUMMARIZATION_MODEL: str = "openai:gpt-4o-mini"
@@ -30,6 +31,27 @@ class Defaults(Enum):
 class Configuration(BaseModel):
     """Configuration for the Agent/App."""
 
+    # --- Clarification Model ---------------------------------------------------------------------
+    clarification_model: str = Field(
+        default=Defaults.CLARIFICATION_MODEL.value,
+        metadata={
+            "x_oap_ui_config": {
+                "type": "text",
+                "default": Defaults.CLARIFICATION_MODEL.value,
+                "description": "Model for conducting research. NOTE: Make sure your Researcher Model supports the selected search API.",
+            },
+        },
+    )
+    clarification_model_max_tokens: int = Field(
+        default=10_000,
+        metadata={
+            "x_oap_ui_config": {
+                "type": "number",
+                "default": 10_000,
+                "description": "Maximum output tokens for research model",
+            },
+        },
+    )
     # --- Research Model --------------------------------------------------------------------------
     research_model: str = Field(
         default=Defaults.RESEARCH_MODEL.value,
@@ -119,11 +141,11 @@ class Configuration(BaseModel):
         },
     )
     compression_model_max_tokens: int = Field(
-        default=8192,
+        default=10_000,
         metadata={
             "x_oap_ui_config": {
                 "type": "number",
-                "default": 8192,
+                "default": 10_000,
                 "description": "Maximum output tokens for compression model",
             },
         },
@@ -187,17 +209,17 @@ class Configuration(BaseModel):
         metadata={
             "x_oap_ui_config": {
                 "type": "text",
-                "default": "openai:gpt-4.1",
+                "default": Defaults.FINAL_REPORT_GENERATION_MODEL.value,
                 "description": "Model for writing the final report from all research findings",
             },
         },
     )
     final_report_generation_model_max_tokens: int = Field(
-        default=10000,
+        default=10_000,
         metadata={
             "x_oap_ui_config": {
                 "type": "number",
-                "default": 10000,
+                "default": 10_000,
                 "description": "Maximum output tokens for final report model",
             },
         },
