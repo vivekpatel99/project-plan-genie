@@ -7,6 +7,7 @@ from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import AIMessage, HumanMessage, MessageLikeRepresentation, filter_messages
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import InjectedToolArg, tool
+from loguru import logger
 from tavily import AsyncTavilyClient
 
 try:
@@ -70,9 +71,6 @@ async def summarize_webpage(model: BaseChatModel, webpage_content: str) -> str:
         # return formatted_summary
 
     except (TimeoutError, Exception):
-        # import traceback
-
-        # print(f"Failed to summarize webpage: {e} - {traceback.format_exc()}")
         return webpage_content
     else:
         return formatted_summary
@@ -167,7 +165,7 @@ async def get_all_tools(config: RunnableConfig):
     return tools
 
 
-def openai_websearch_called(response):
+def openai_websearch_called(response) -> bool:
     tool_outputs = response.additional_kwargs.get("tool_outputs")
     if tool_outputs:
         for tool_output in tool_outputs:
@@ -176,15 +174,13 @@ def openai_websearch_called(response):
     return False
 
 
+@logger.catch
 async def execute_tool_safely(tool, args, config: dict | None = None):
     # config = Configuration.from_runnable_config(config)
     try:
         return await tool.ainvoke(args, config)
     except Exception as e:
-        # import traceback
-
-        # print(f"Error executing tool: {e} - {traceback.format_exc()}")
-        return f"Error executing tool: {e}"  # - {traceback.format_exc()}"
+        return f"Error executing tool: {e}"
 
 
 def get_today_str() -> str:

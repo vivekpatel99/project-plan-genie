@@ -2,11 +2,7 @@
 
 from pathlib import Path
 
-
-def read_prompt(file_name: str, prompt_dir: Path = Path(__file__).parent) -> str:
-    prompt_file = prompt_dir / f"{file_name}.md"
-    return prompt_file.read_text()
-
+from loguru import logger
 
 PLANNING_AGENT_SYSTEM_PROMPT = """
 # Enterprise Software Project Planning AI Agent
@@ -232,10 +228,36 @@ Your planning is successful when:
 Now, when given any project request, apply this comprehensive framework to create detailed, actionable implementation plans that embody software engineering excellence.
  """
 
+
+def read_prompt(file_name: str, prompt_dir: Path = Path(__file__).parent) -> str:
+    """
+    Note: can not move this function to utils, avoiding circular import error.
+
+    Reads the contents of a file in the prompts directory into a string.
+
+    Args:
+    file_name (str): The name of the file to read.
+    prompt_dir (Path): The directory where the prompts are stored. Defaults to the same directory as
+        this module.e
+
+    Returns:
+    str: The contents of the file.
+
+    """
+    prompt_file = prompt_dir / f"{file_name}.md"
+    if not prompt_file.exists():
+        msg = f"Prompt file {prompt_file} does not exist."
+        logger.error(msg)
+        raise FileNotFoundError(msg)
+    return prompt_file.read_text()
+
+
 SYSTEM_PROMPT_PROJECT_PLAN_STRUCTURE = read_prompt(file_name="project_plan_structure_system_prompts")
 
+CLARIFY_WITH_USER_INSTRUCTIONS = read_prompt(file_name="clarify_with_user_system_prompt")
 
-#######################################################
+TRANSFORM_MESSAGES_INTO_RESEARCH_TOPIC_PROMPT = read_prompt(file_name="transform_messages_into_research_topic_prompt")
+
 SUMMARIZE_WEBPAGE_PROMPT = read_prompt(file_name="summarize_webpage")
 
 COMPRESS_RESEARCH_SYSTEM_PROMPT = read_prompt(file_name="compress_research_system_prompt")
@@ -246,7 +268,5 @@ DO NOT summarize the information. I want the raw information returned, just in a
 
 RESEARCH_SYSTEM_PROMPT = read_prompt(file_name="research_system_prompt")
 
-CLARIFY_WITH_USER_INSTRUCTIONS = read_prompt(file_name="clarify_with_user_system_prompt")
 
-
-TRANSFORM_MESSAGES_INTO_RESEARCH_TOPIC_PROMPT = read_prompt(file_name="transform_messages_into_research_topic_prompt")
+LEAD_RESEARCHER_PROMPT = read_prompt(file_name="lead_researcher_system_prompt")

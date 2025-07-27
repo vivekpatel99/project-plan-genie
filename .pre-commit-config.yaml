@@ -64,5 +64,5 @@ repos:
     hooks:
       - id: codespell
         args:
-          - --skip=logs/**,data/**,*.ipynb
+          - --skip=logs/**,data/**,*.ipynb, examples/**
           - --ignore-words-list=abc,def,fpr,tpr,roc_auc,auc

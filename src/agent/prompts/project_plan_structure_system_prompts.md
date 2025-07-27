@@ -2,14 +2,25 @@ Based on all the research conducted, create a comprehensive, well-structured ans
 <Research Brief>
 {research_brief}
 \</Research Brief>
+
 Today's date is {date}.
+
 Here are the findings from the research that you conducted:
 <Findings>
 {findings}
 </Findings>
+
+**ENGINEERING GUIDELINES (reference when drafting the plan)**
+• Package / Structure – modular hierarchical packages, clear __init__.py, SoC\
+• Architecture – Factory, Strategy, Template Method, ABCs, DI, context managers, singleton (only when unavoidable)\
+• Errors & Logging – custom exceptions, graceful recovery, fail-fast, rich logs\
+• Config – centralized, env-specific, secure defaults, runtime overrides\
+• SOLID – SRP, OCP, LSP, ISP, DIP
+
 **Your task:**
-Using only the provided information, generate a final project plan in the exact Markdown format below.
-If any section lacks information, state “N/A” for that item.
+Using only the provided information and the ENGINEERING GUIDELINES above, generate a final project plan in the exact Markdown format below.
+• When listing Design Patterns or Best Practices, specify WHERE in the codebase they should be applied (e.g. “Use Factory in /services/factories.py”).\
+• If any section lacks information, state “N/A”.
 
 # Project Blueprint: [Project Name]
 
@@ -33,24 +44,20 @@ Provide a table of recommended technologies and a detailed justification for eac
 
 Provide a recommended folder structure and explain the key design patterns to be used.
 
-### Recommended Folder Structure (Monorepo Example)
-
-/project-root
-├── /apps
-│ ├── /web-client # Next.js Frontend
-│ └── /api-server # Express Backend
-├── /packages
-│ ├── /ui-components # Shared React components
-│ └── /shared-types # TypeScript types for API
-└── package.json
+### Recommended Folder Structure
 
 ### Key Design Patterns
 
-| Pattern Name              | Where to Apply               | Rationale                                                                | Trade-offs / Notes |
-| ------------------------- | ---------------------------- | ------------------------------------------------------------------------ | ------------------ |
-| **Model-View-Controller** | Backend API structure        | Separates concerns, making the application easier to maintain and scale. |                    |
-| **Repository Pattern**    | Data access layer in backend | Decouples business logic from data sources for easier testing/swapping.  |                    |
-| **Component-Based Arch.** | Frontend UI development      | Promotes reusability/modularity, easier state management.                |                    |
+(Reference the ENGINEERING GUIDELINES. For each pattern, state the exact layer/file where it should live.)
+
+| Pattern Name              | Where to Apply                          | Rationale                                     | Trade-offs / Notes |
+| ------------------------- | --------------------------------------- | --------------------------------------------- | ------------------ |
+| **Model-View-Controller** | Backend API controllers & views         | Separates concerns, easier scaling & testing  |                    |
+| **Repository Pattern**    | /api-server/repositories                | Decouples business logic from data stores     |                    |
+| **Strategy Pattern**      | /api-server/services/payment_strategies | Swappable algorithms (e.g. payment providers) |                    |
+| **Factory Pattern**       | /api-server/factories                   | Centralized object creation, enables DI       |                    |
+| **Dependency Injection**  | Service constructors & FastAPI Depends  | Loose coupling, easier unit testing           |                    |
+| **Context Manager**       | /api-server/db/session_manager.py       | Safe resource cleanup for DB sessions         |                    |
 
 ## 4. Phased Development Plan (MVP to Full Launch)
 
@@ -72,33 +79,26 @@ Divide the development into sequential phases. Make each feature a checklist ite
 
 ## 5. Key Best Practices
 
-List essential best practices for the project lifecycle.
+List essential best practices for the project lifecycle and indicate HOW / WHERE they are enforced.
 
-- Version Control:
-- Testing:
-- Code Quality:
-- Security:
-- Documentation:
+- Version Control: trunk-based flow, PR checks, semantic commits
+- Testing: unit (pytest), integration (docker-compose), e2e (Playwright)
+- Code Quality: lint (ruff), formatter (black), type-check (mypy)
+- Security: OWASP top-10 audit, dependency scanning, secrets management
+- Documentation: ADRs in /docs/adr, API docs via OpenAPI, README badges
 
-6. In the Sources section:
+## 6. Sources
 
-- Include all sources used in your report
-- Provide full links to relevant websites or specific document paths
-- Separate each source by a newline. Use two spaces at the end of each line to create a newline in Markdown.
-- It will look like:
+• Include all sources used in your report\
+• Provide full links; remove duplicates.
 
 ### Sources
 
-[1] Link or Document name
-[2] Link or Document name
-7\. Be sure to combine sources. For example this is not correct:
-[3] https://ai.meta.com/blog/meta-llama-3-1/
-[4] https://ai.meta.com/blog/meta-llama-3-1/
-There should be no redundant sources. It should simply be:
-[3] https://ai.meta.com/blog/meta-llama-3-1/
+[1] …\
+[2] …
 
-8. Final review:
+## 7. Final review
 
-- Ensure the report follows the required structure
-- Include no preamble before the title of the report
-- Check that all guidelines have been followed
+• Ensure the report follows the required structure\
+• Include no preamble before the title of the report\
+• Check that all guidelines have been followed
