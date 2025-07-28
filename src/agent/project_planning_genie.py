@@ -7,7 +7,7 @@ from loguru import logger
 try:
     from .clarification_agent_subgraph import clarify_with_user, write_research_brief
     from .configuration import Configuration
-    from .final_report_generation import final_report_generation
+    from .final_report_generation import final_report_graph
     from .states import (
         AgentInputState,
         AgentState,
@@ -24,7 +24,7 @@ except ImportError:
         write_research_brief,
     )
     from src.agent.configuration import Configuration
-    from src.agent.final_report_generation import final_report_generation
+    from src.agent.final_report_generation import final_report_graph
     from src.agent.states import (
         AgentInputState,
         AgentState,
@@ -44,6 +44,8 @@ config = {
         },
     ],
 }
+
+
 logger.configure(**config)
 
 logger.info("Initializing Project Planning Genie...")
@@ -61,7 +63,8 @@ agent_builder = StateGraph(
 
 agent_builder.add_node("clarify_with_user", clarify_with_user)
 agent_builder.add_node("write_research_brief", write_research_brief)
-agent_builder.add_node("final_report_generation", final_report_generation)
+agent_builder.add_node("final_report_generation", final_report_graph)
+
 agent_builder.add_node("supervisor_subgraph", supervisor_subgraph)
 
 agent_builder.add_edge(START, "clarify_with_user")

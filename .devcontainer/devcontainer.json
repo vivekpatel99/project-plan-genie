@@ -3,8 +3,11 @@
 {
 	"name": "project-prlanning-genie",
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-	"image": "mcr.microsoft.com/devcontainers/python:3.13-bookworm",
-
+	// "image": "mcr.microsoft.com/devcontainers/python:3.13-bookworm",
+	"build": {
+		"context": "..",
+		"dockerfile": "../Dockerfile"
+	},
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
 

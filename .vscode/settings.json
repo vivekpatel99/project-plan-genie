@@ -4,19 +4,17 @@
     "[python]": {
       "editor.formatOnSave": true,
       "editor.defaultFormatter": "charliermarsh.ruff",
-      // "editor.codeActionsOnSave": {
-      //   "source.fixAll.ruff": "always",
-      //   "source.organizeImports.ruff": "always",
-      // },
+      "editor.codeActionsOnSave": {
+        "source.fixAll.ruff": "always",
+        "source.organizeImports.ruff": "explicit",
+      },
       
     },
     // ruff settings
     "ruff.fixAll": true,
     "ruff.organizeImports": true,
     "python.analysis.autoSearchPaths": true,
-    "python.analysis.diagnosticSeverityOverrides": {
-        "reportMissingImports": "none"
-    },
+
     "python.analysis.extraPaths": [
         "${workspaceFolder}/src",
         "${workspaceFolder}/notebooks"
@@ -25,20 +23,33 @@
     // "ruff.configuration": "${workspaceFolder}/.ruff.toml",
     "python.envFile": "${workspaceFolder}/.env",
     "python.terminal.activateEnvironment": true,
+    "python.analysis.autoImportCompletions": true,
+    "python.analysis.packageIndexDepths": [
+      {
+        "name": "langchain_core",
+        "depth": 2,
+        "includeAllSymbols": false
+      },
+      {
+        "name": "langgraph",
+        "depth": 3,
+        "includeAllSymbols": true
+      }
+    ],
     // Test settings
     "python.testing.pytestEnabled": true,
     "python.analysis.enablePytestSupport": true,
     "python.testing.unittestEnabled": false,
     "python.testing.cwd": "${workspaceFolder}",
     "python.testing.pytestPath": ".venv/bin/python",
-    "python.testing.autoTestDiscoverOnSaveEnabled": true,
-    "python.analysis.typeCheckingMode": "off", // Disable Pylance Checking so MyPy Extension is only used
+    "python.testing.autoTestDiscoverOnSaveEnabled": true, // gemini
+    "python.analysis.typeCheckingMode": "off", // gemini
     "files.exclude": {
     "**/*.egg-info": true,
     "**/htmlcov": true,
     "**/~$*": true,
     "**/.coverage.*": true,
-    "**/.venv": true,
+    // "**/.venv": true,
     "**/.ipynb_checkpoints": true,
     "**/__pycache__": true,
     "**/.ruff_cache": true,

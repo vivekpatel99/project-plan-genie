@@ -112,6 +112,7 @@ async def supervisor_tool(state: SupervisorState, config: RunnableConfig) -> Com
     research_complete_tool_call = any(
         tool_call["name"] == "ResearchComplete" for tool_call in most_recent_message.tool_calls
     )
+    # Report completed
     if exceeded_allowed_iterations or no_tool_calls or research_complete_tool_call:
         logger.info("exceeded_allowed_iterations or no_tool_calls or research_complete_tool_call")
         return Command(
