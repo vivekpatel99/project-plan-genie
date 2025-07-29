@@ -4,6 +4,7 @@ from typing import Literal
 from langchain.chat_models import init_chat_model
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage, get_buffer_string
 from langchain_core.runnables import RunnableConfig
+from langchain_core.tools import tool
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from langgraph.func import END
 from langgraph.graph import START, StateGraph
@@ -30,9 +31,6 @@ protected_tools: list[str] = ["create_directory", "write_file"]
 
 
 client = MultiServerMCPClient(connections=mcp_config["mcpServers"])
-# loop = asyncio.new_event_loop()  # 1️⃣ make a loop for this thread
-# tools = loop.run_until_complete(client.get_tools())  # 2️⃣ run the async call
-# loop.close()
 
 
 class ReportGenerated:
@@ -57,46 +55,45 @@ async def final_report_generation(
     )
 
     notes = state.get(StatesKeys.NOTES.value, [])
+    messages = state.get(StatesKeys.MSGS.value, [])
+    research_brief = state[StatesKeys.RESEARCH_BRIEF.value]
+
     config = Configuration.from_runnable_config(config)
     report_generator_config = {
         "model": config.final_report_generation_model,
         "max_tokens": config.final_report_generation_model_max_tokens,
     }
     print("################### notes", notes)
+
     findings = "\n".join(notes)
 
     max_retries: int = 3
     current_retry: int = 0
     tools = await client.get_tools()
-    research_brief = state[StatesKeys.RESEARCH_BRIEF.value]
-    while current_retry <= max_retries:
-        final_report_prompt = SYSTEM_PROMPT_PROJECT_PLAN_STRUCTURE.format(
-            research_brief=research_brief,
-            findings=findings,
-            date=get_today_str(),
-            messages=get_buffer_string(state.get(StatesKeys.MSGS.value, [])),
+    final_report_prompt = SYSTEM_PROMPT_PROJECT_PLAN_STRUCTURE.format(
+        research_brief=research_brief,
+        findings=findings,
+        date=get_today_str(),
+        messages=get_buffer_string(messages),
+    )
+    report_generator_model = (
+        model_shell.bind_tools([*tools, tool(ReportGenerated)])
+        .with_retry(
+            stop_after_attempt=config.max_structured_output_retries,
         )
+        .with_config(report_generator_config)
+    )
+    # Include previous messages in context so model can see tool results
+    # conversation_messages = [*messages]
+    while current_retry <= max_retries:
         try:
-            report_generator_model = model_shell.bind_tools(tools)
+            response = await report_generator_model.ainvoke([HumanMessage(content=final_report_prompt)])
 
-            report_generator_model = report_generator_model.with_retry(
-                stop_after_attempt=config.max_structured_output_retries,
-            )
-
-            report_generator_model = report_generator_model.with_config(report_generator_config)
-
-            response = await report_generator_model.ainvoke(
-                [
-                    HumanMessage(content=final_report_prompt),
-                ],
-            )
-
-            # msgs.append(response)
             print("################### report_generator_model", response)
             logger.info("Final report generated: {}", response)
             return {  # noqa: TRY300
                 StatesKeys.FINAL_REPORT.value: response.content,
-                StatesKeys.MSGS.value: response,
+                StatesKeys.MSGS.value: [response],
             }
         except Exception as e:
             last_exception = e
@@ -127,6 +124,12 @@ async def mcp_tool_call(state: AgentState, config: RunnableConfig) -> Command[Li
     tool_calls = last_message.tool_calls
     print("######## Tool Calls: {}", tool_calls)
     print("######## Tools: {}", tools_by_name)
+
+    # Check for ReportGenerated BEFORE executing other tools
+    if any(tool_call["name"] == "ReportGenerated" for tool_call in last_message.tool_calls):
+        return Command(goto="end")
+
+    # Execute tools
     async_responses = [
         execute_tool_safely(tools_by_name[tool_call["name"]], tool_call["args"], config.model_dump())
         for tool_call in tool_calls
@@ -142,12 +145,13 @@ async def mcp_tool_call(state: AgentState, config: RunnableConfig) -> Command[Li
     ]
     print("######## tool_outputs: {}", tool_outputs)
     print(f"tools messages {[tools_msg.content for tools_msg in tool_outputs]}")
+    current_notes = state.get(StatesKeys.NOTES.value, [])
+    new_notes = [tool_msg.content for tool_msg in tool_outputs]
     return Command(
         goto="final_report_generation",
         update={
-            StatesKeys.MSGS.value: tool_outputs,
-            # StatesKeys.NOTES.value: state.get(StatesKeys.NOTES.value, [])
-            # + [tools_msg.content for tools_msg in tool_outputs],
+            StatesKeys.MSGS.value: [*messages, *tool_outputs],  # Full conversation,
+            StatesKeys.NOTES.value: current_notes + new_notes,  # Persist tool results
         },
     )
 
@@ -155,7 +159,14 @@ async def mcp_tool_call(state: AgentState, config: RunnableConfig) -> Command[Li
 # Ensure your state uses "messages" key if using prebuilt tools_condition
 async def should_continue(state: AgentState) -> str:
     messages = state.get(StatesKeys.MSGS.value, [])
-    if messages and hasattr(messages[-1], "tool_calls"):
+    if not messages:
+        return "end"
+    last_message = messages[-1]
+    # Check if it's an AI message with tool calls
+    if isinstance(last_message, AIMessage) and getattr(last_message, "tool_calls", None):
+        # Check for ReportGenerated tool call
+        if any(tool_call["name"] == "ReportGenerated" for tool_call in last_message.tool_calls):
+            return "end"
         return "mcp_tool_call"
     return "end"
 
