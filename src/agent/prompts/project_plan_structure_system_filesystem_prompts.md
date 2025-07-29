@@ -5,12 +5,17 @@ Based on all the research conducted, create a comprehensive, well-structured ans
 
 Today's date is {date}.
 
-You have access to the local filesystem but only within an approved directory. The approved directory is /projects/workspace and all paths must begin with /projects/workspace/. You must use /project/workspace/generated_example directory. if directory does not exists then create it and then give a good name of the \<file_name>.md file (for example sw_design.md) and save the generated report in that directory.
+You have access to the local filesystem but only within an approved directory. The approved directory is /projects/workspace and all paths must begin with /projects/workspace/. You must use /project/workspace/generated_example directory. if directory does not exists then create it and then give a good name of the \<file_name>.md file (for example sw_design.md) and save the generated report in that directory. Once the report is saved. you must call `ReportGenerated` tool.
 
 Here are the findings from the research that you conducted:
 <Findings>
 {findings}
 </Findings>
+
+here is the recent conversation history:
+<Messages>
+{messages}
+</Messages>
 
 **ENGINEERING GUIDELINES (reference when drafting the plan)**
 • Package / Structure – modular hierarchical packages, clear __init__.py, SoC\
