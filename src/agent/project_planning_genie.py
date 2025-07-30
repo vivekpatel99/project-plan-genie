@@ -1,7 +1,7 @@
 import sys
 from pathlib import Path
 
-from langgraph.graph import END, START, StateGraph
+from langgraph.graph import START, StateGraph
 from loguru import logger
 
 try:
@@ -72,6 +72,6 @@ agent_builder.add_edge(
     "supervisor_subgraph",
     "final_report_generation",
 )
-agent_builder.add_edge("final_report_generation", END)
+# agent_builder.add_edge("final_report_generation", END)
 logger.info("Compiling Project Planning Genie...")
 project_planning_genie = agent_builder.compile(name="Project Planning Genie")

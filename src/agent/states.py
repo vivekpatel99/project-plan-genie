@@ -38,8 +38,8 @@ class AgentState(MessagesState):
 
     supervisor_messages: Annotated[list[MessageLikeRepresentation], add_messages]
     research_brief: str | None
-    raw_notes: Annotated[list[str], add_messages] = None
-    notes: Annotated[list[str] | None, add_messages] = None
+    raw_notes: Annotated[list[str] | None, operator.add] = None
+    notes: Annotated[list[str] | None, operator.add] = None
     final_report: str
 
 
