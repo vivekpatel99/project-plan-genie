@@ -8,7 +8,7 @@ Automatically extract typed text (including digits, equations, and diagrams) fro
 **Formatting & Structuring:**
 Clean and format extracted notes (markdown, LaTeX for equations, code blocks, etc.).
 Detect and separate sections; classify content to either add as a new Notion sub-page/page or merge with an existing page.
-The diagram can be either a flowchart or a block diagram. they must editable
+The diagram can be either a flowchart or a block diagram. it must supports tables.
 **Integration with Notion:**
 Upload formatted notes programmatically into Notion, preserving structure and style. it must use Notion integration API key for authentication and access to Notion's database. I will mcp server for this.
 

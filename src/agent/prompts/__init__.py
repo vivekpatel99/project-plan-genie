@@ -270,3 +270,5 @@ RESEARCH_SYSTEM_PROMPT = read_prompt(file_name="research_system_prompt")
 
 
 LEAD_RESEARCHER_PROMPT = read_prompt(file_name="lead_researcher_system_prompt")
+
+TOOL_MANAGER_PROMPT = read_prompt(file_name="tool_manager_system_prompt")

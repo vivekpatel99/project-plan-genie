@@ -24,6 +24,7 @@ class StatesKeys(str, Enum):
     RESEARCH_MSGS = "research_messages"
     TOOL_CALL_ITERATIONS = "tool_call_iterations"
     COMPRESSED_RESEARCH = "compressed_research"
+    TOOL_MANAGER_MESSAGES = "tool_manager_messages"
 
 
 # --- Clarification Agent ------------------------------------------------------------------
@@ -41,6 +42,9 @@ class AgentState(MessagesState):
     raw_notes: Annotated[list[str] | None, operator.add] = None
     notes: Annotated[list[str] | None, operator.add] = None
     final_report: str
+    mcp_tools: list  # [BaseTool]  # | None = None
+    mcp_tools_by_name: dict  # [str, BaseTool] | None = None
+    tool_manager_messages: Annotated[list[MessageLikeRepresentation], add_messages]
 
 
 class Summary(BaseModel):

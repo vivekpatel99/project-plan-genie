@@ -102,3 +102,4 @@ This project planning agent helps developers and teams break down complex projec
 1. [open_deep_research](https://github.com/langchain-ai/open_deep_research/tree/main)
 2. [Open Deep Research-Youtube](https://www.youtube.com/watch?v=agGiWUpxkhg)
 3. [LangGraph](https://github.com/langchain-ai/langgraph)
+4. https://github.com/kenneth-liao/human-in-the-loop/tree/main
