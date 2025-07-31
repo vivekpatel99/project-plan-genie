@@ -24,7 +24,7 @@ class Defaults(Enum):
     RESEARCH_MODEL: str = "openai:gpt-4o"
     COMPRESSION_MODEL: str = "openai:gpt-4o-mini"
     SUMMARIZATION_MODEL: str = "openai:gpt-4o-mini"
-    FINAL_REPORT_GENERATION_MODEL: str = "ollama:qwen3:8b"  # "openai:gpt-4.1"
+    FINAL_REPORT_GENERATION_MODEL: str = "openai:gpt-4.1"  # ollama:qwen3:8b"  #
     SEARCH_API: SearchAPI = SearchAPI.TAVILY
 
 

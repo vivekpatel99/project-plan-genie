@@ -31,7 +31,16 @@ protected_tools: list[str] = ["create_directory", "write_file"]
 # https://github.com/modelcontextprotocol/servers/tree/main/src/filesystem
 
 
-client = MultiServerMCPClient(connections=mcp_config["mcpServers"])
+async def get_mcp_tools():
+    """
+    Get all the available tools on the MCP servers.
+
+    Returns:
+        list[ToolMessage]: List of all the available tools.
+
+    """
+    client = MultiServerMCPClient(connections=mcp_config["mcpServers"])
+    return await client.get_tools()
 
 
 @tool
@@ -72,7 +81,7 @@ async def final_report_generation(
 
     max_retries: int = 3
     current_retry: int = 0
-    tools = await client.get_tools()
+    tools = await get_mcp_tools()
     final_report_prompt = SYSTEM_PROMPT_PROJECT_PLAN_STRUCTURE.format(
         research_brief=research_brief,
         findings=findings,
@@ -92,6 +101,8 @@ async def final_report_generation(
             response = await report_generator_model.ainvoke([HumanMessage(content=final_report_prompt)])
 
             logger.info("Final report generated: {}", response)
+            print("Final report generated: {}", response)
+
             return {  # noqa: TRY300
                 StatesKeys.FINAL_REPORT.value: response.content,
                 StatesKeys.MSGS.value: [response],
@@ -119,13 +130,13 @@ async def mcp_tool_call(state: AgentState, config: RunnableConfig) -> Command[Li
 
     config = Configuration.from_runnable_config(config)
 
-    tools = await client.get_tools()
+    tools = await get_mcp_tools()
     tools_by_name = {tool.name: tool for tool in tools if hasattr(tool, "name")}
     tool_calls = last_message.tool_calls
 
     # Check for ReportGenerated BEFORE executing other tools
-    if any(tool_call["name"] == "ReportGenerated" for tool_call in last_message.tool_calls):
-        return Command(goto="end")
+    # if any(tool_call["name"] == "ReportGenerated" for tool_call in last_message.tool_calls):
+    #     return Command(goto="end")
 
     # Execute tools step by step, because directory must be created first and the file creation
     observations = [
@@ -154,11 +165,14 @@ async def should_continue(state: AgentState) -> str:
     if not messages:
         return "end"
     last_message = messages[-1]
+    print("################################")
+    print("should_continue: last_message: ", last_message)
+    print("should_continue:  last_message.tool_calls: ", last_message.tool_calls)
     # Check if it's an AI message with tool calls
     if isinstance(last_message, AIMessage) and getattr(last_message, "tool_calls", None):
         # Check for ReportGenerated tool call
-        if any(tool_call["name"] == "ReportGenerated" for tool_call in last_message.tool_calls):
-            return "end"
+        # if any(tool_call["name"] == "ReportGenerated" for tool_call in last_message.tool_calls):
+        #     return "end"
         return "mcp_tool_call"
     return "end"
 
