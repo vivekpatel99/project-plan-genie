@@ -2,15 +2,15 @@ Develop an agent-powered AI note-taking app using LangGraph, designed for person
 
 **Core Features**
 **Image Capture:**
-Capture pictures of handwritten notes via a user interface (LangGraph's prebuilt UI, accessible from PC).
+Capture pictures of handwritten notes via a user interface (LangGraph's prebuilt UI, accessible from PC). It should capture image one by one.
 **English Handwriting Recognition:**
-Automatically extract typed text (including digits, equations, and diagrams) from handwritten pictures using cutting-edge OCR. you should search for best open source(free) ocr engine for python. Equation must be also in Latex format.
+Automatically extract typed text (including digits, equations, and diagrams) from handwritten pictures using cutting-edge OCR. you should search for best open source(free) ocr engine for python. Equation must be also in Latex format. You must find best open source OCR engine for this task
 **Formatting & Structuring:**
 Clean and format extracted notes (markdown, LaTeX for equations, code blocks, etc.).
 Detect and separate sections; classify content to either add as a new Notion sub-page/page or merge with an existing page.
-The diagram can be either a flowchart or a block diagram. it must supports tables.
+The diagram can be either a flowchart or a block diagram. it must supports tables. Diagram must be editable for user interaction/update.
 **Integration with Notion:**
-Upload formatted notes programmatically into Notion, preserving structure and style. it must use Notion integration API key for authentication and access to Notion's database. I will mcp server for this.
+Upload formatted notes programmatically into Notion, preserving structure and style. it must use Notion integration API key (my personal API keys) for authentication and access to Notion's database. I will mcp server for communicating with Notion.
 
 **Agentic Orchestration:**
 Use a multi-agent system in LangGraph for more information -'https://docs.oap.langchain.com/quickstart':

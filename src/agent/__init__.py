@@ -7,9 +7,9 @@ This module defines a custom graph.
 from .configuration import Configuration
 from .states import (
     AgentInputState,
-    AgentState,
     ClarifyWithUser,
     ConductResearch,
+    ReportGeneratorState,
     ResearchComplete,
     ResearcherOutputState,
     ResearchQuestion,
@@ -19,10 +19,10 @@ from .states import (
 
 __all__ = [
     "AgentInputState",
-    "AgentState",
     "ClarifyWithUser",
     "ConductResearch",
     "Configuration",
+    "ReportGeneratorState",
     "ResearchComplete",
     "ResearchQuestion",
     "ResearchState",

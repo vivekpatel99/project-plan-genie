@@ -4,36 +4,29 @@ from typing import Literal
 from langchain.chat_models import init_chat_model
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage, get_buffer_string
 from langchain_core.runnables import RunnableConfig
-from langchain_core.tools import tool
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from langgraph.func import END
 from langgraph.graph import START, StateGraph
 from langgraph.types import Command
 from loguru import logger
-from pydantic import BaseModel
 
 try:
     from .configuration import Configuration
     from .my_mcps import mcp_config
     from .prompts import SYSTEM_PROMPT_PROJECT_PLAN_STRUCTURE, TOOL_MANAGER_PROMPT
-    from .states import AgentState, StatesKeys
+    from .states import ReportGeneratorState, StatesKeys
     from .utils import execute_tool_safely, get_today_str
 except ImportError:
     # rootutils.setup_root(__file__, indicator=".git", pythonpath=True)
     from src.agent.configuration import Configuration
     from src.agent.my_mcps import mcp_config
     from src.agent.prompts import SYSTEM_PROMPT_PROJECT_PLAN_STRUCTURE, TOOL_MANAGER_PROMPT
-    from src.agent.states import AgentState, StatesKeys
+    from src.agent.states import ReportGeneratorState, StatesKeys
     from src.agent.utils import execute_tool_safely, get_today_str
 
 protected_tools: list[str] = ["create_directory", "write_file"]
 
 # https://github.com/modelcontextprotocol/servers/tree/main/src/filesystem
-
-
-@tool
-class ReportGenerated(BaseModel):
-    """Call this tool to indicate that the Report generation is successfully completed."""
 
 
 # Initialize a configurable model that we will use throughout the agent
@@ -43,7 +36,10 @@ model_shell = init_chat_model(
 
 
 @logger.catch
-async def final_report_generation(state: AgentState, config: RunnableConfig) -> Command[Literal["get_mcp_tools_node"]]:
+async def final_report_generation(
+    state: ReportGeneratorState,
+    config: RunnableConfig,
+) -> Command[Literal["get_mcp_tools_node"]]:
     """
     Generate final report from the  research notes and findings.
 
@@ -78,6 +74,7 @@ async def final_report_generation(state: AgentState, config: RunnableConfig) -> 
         stop_after_attempt=config.max_structured_output_retries,
     ).with_config(report_generator_config)
 
+    last_exception = None
     while current_retry <= max_retries:
         try:
             response = await report_generator_model.ainvoke([HumanMessage(content=final_report_prompt)])
@@ -108,12 +105,21 @@ async def final_report_generation(state: AgentState, config: RunnableConfig) -> 
     )
 
 
-async def get_mcp_tools_node() -> Command[Literal["tool_manager"]]:
+async def get_mcp_tools_node(
+    state: ReportGeneratorState,  # noqa: ARG001
+    config: RunnableConfig,  # # noqa: ARG001
+) -> Command[Literal["tool_manager"]]:
     """
     Get all the available tools on the MCP servers.
 
+    Args:
+        state (Report generation state): Unused
+        config (Runnable configuration): Unused
+
     Returns:
-        list[ToolMessage]: List of all the available tools.
+        list[ToolMessage]: List of all available tools
+
+    Note: The parameters 'state' and 'config' are not used in this implementation but kept to satisfy langgraph requirements
 
     """
     print("################# Getting MCP tools...")
@@ -125,7 +131,7 @@ async def get_mcp_tools_node() -> Command[Literal["tool_manager"]]:
 
 
 @logger.catch
-async def tool_manager(state: AgentState, config: RunnableConfig):
+async def tool_manager(state: ReportGeneratorState, config: RunnableConfig):
     """Tool manager to handle the execution of tools. It has single responsibility to save the markdown report into .md file with given format."""
     logger.info("Tool manager invoked.")
 
@@ -145,13 +151,15 @@ async def tool_manager(state: AgentState, config: RunnableConfig):
 
     tools = state["mcp_tools"]
     print("################# tool_manager Got MCP tools:")
-    _model = model_shell.bind_tools([*tools])
+    _model = model_shell.bind_tools(tools)
     _model = _model.with_retry(stop_after_attempt=config.max_structured_output_retries)
     tool_manager_model = _model.with_config(report_generator_config)
 
     while current_retry <= max_retries:
         try:
-            response = await tool_manager_model.ainvoke([*tool_manager_messages, HumanMessage(content=final_report)])
+            response = await tool_manager_model.ainvoke(
+                [*tool_manager_messages, HumanMessage(content=f"here is the final report {final_report}")],
+            )
 
             logger.info("Tool Manager:")
             print("######## Tool Manager's tool call response: ")
@@ -177,7 +185,7 @@ async def tool_manager(state: AgentState, config: RunnableConfig):
 
 
 @logger.catch
-async def mcp_tool_call(state: AgentState, config: RunnableConfig) -> Command[Literal["tool_manager"]]:
+async def mcp_tool_call(state: ReportGeneratorState, config: RunnableConfig) -> Command[Literal["tool_manager"]]:
     """Call this tool to indicate that the Report generation is successfully completed."""
     # Initialize a configurable model that we will use throughout the agent
     messages = state.get(StatesKeys.TOOL_MANAGER_MESSAGES.value, [])
@@ -210,7 +218,7 @@ async def mcp_tool_call(state: AgentState, config: RunnableConfig) -> Command[Li
     }
 
 
-async def should_continue(state: AgentState) -> str:
+async def should_continue(state: ReportGeneratorState) -> str:
     messages = state.get(StatesKeys.TOOL_MANAGER_MESSAGES.value, [])
     if not messages:
         return "end"
@@ -225,8 +233,7 @@ async def should_continue(state: AgentState) -> str:
     return "end"
 
 
-builder = StateGraph(AgentState, config_schema=Configuration)
-# builder = StateGraph(state, config_schema=config)
+builder = StateGraph(ReportGeneratorState, config_schema=Configuration)
 builder.add_node("final_report_generation", final_report_generation)
 builder.add_node("get_mcp_tools_node", get_mcp_tools_node)
 builder.add_node("tool_manager", tool_manager)
