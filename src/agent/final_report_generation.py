@@ -122,7 +122,7 @@ async def get_mcp_tools_node(
     Note: The parameters 'state' and 'config' are not used in this implementation but kept to satisfy langgraph requirements
 
     """
-    print("################# Getting MCP tools...")
+    logger.info("Getting MCP tools...")
     client = MultiServerMCPClient(connections=mcp_config["mcpServers"])
     tools = await client.get_tools()
     tools_by_name = {tool.name: tool for tool in tools if hasattr(tool, "name")}
@@ -150,7 +150,6 @@ async def tool_manager(state: ReportGeneratorState, config: RunnableConfig):
     current_retry: int = 0
 
     tools = state["mcp_tools"]
-    print("################# tool_manager Got MCP tools:")
     _model = model_shell.bind_tools(tools)
     _model = _model.with_retry(stop_after_attempt=config.max_structured_output_retries)
     tool_manager_model = _model.with_config(report_generator_config)
@@ -161,8 +160,7 @@ async def tool_manager(state: ReportGeneratorState, config: RunnableConfig):
                 [*tool_manager_messages, HumanMessage(content=f"here is the final report {final_report}")],
             )
 
-            logger.info("Tool Manager:")
-            print("######## Tool Manager's tool call response: ")
+            logger.debug("Tool Manager response:", response)
             return {  # noqa: TRY300
                 StatesKeys.TOOL_MANAGER_MESSAGES.value: [response],
                 StatesKeys.FINAL_REPORT.value: final_report,
@@ -187,9 +185,10 @@ async def tool_manager(state: ReportGeneratorState, config: RunnableConfig):
 @logger.catch
 async def mcp_tool_call(state: ReportGeneratorState, config: RunnableConfig) -> Command[Literal["tool_manager"]]:
     """Call this tool to indicate that the Report generation is successfully completed."""
+    logger.info("Running mcp_tool_call")
+    # Get all tools
     # Initialize a configurable model that we will use throughout the agent
     messages = state.get(StatesKeys.TOOL_MANAGER_MESSAGES.value, [])
-    print("############## mcp_tool_call #################")
     config = Configuration.from_runnable_config(config)
 
     # tools = state["mcp_tools"]
@@ -219,17 +218,15 @@ async def mcp_tool_call(state: ReportGeneratorState, config: RunnableConfig) -> 
 
 
 async def should_continue(state: ReportGeneratorState) -> str:
+    logger.info("Checking if we should continue...")
     messages = state.get(StatesKeys.TOOL_MANAGER_MESSAGES.value, [])
     if not messages:
         return "end"
     last_message = messages[-1]
-    print("################################")
-    print("should_continue: last_message: ")
     # Check if it's an AI message with tool calls
     if isinstance(last_message, AIMessage) and getattr(last_message, "tool_calls", None):
-        print("Going to mcp_tool_call: last_message.tool_calls: ")
+        logger.info("Going to mcp_tool_call: last_message.tool_calls: ")
         return "mcp_tool_call"
-    print("################################ ending")
     return "end"
 
 
