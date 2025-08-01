@@ -2,7 +2,7 @@ Develop an agent-powered AI note-taking app using LangGraph, designed for person
 
 **Core Features**
 **Image Capture:**
-Capture pictures of handwritten notes via a user interface (LangGraph's prebuilt UI, accessible from PC). It should capture image one by one.
+Capture pictures of handwritten notes in English via a user interface (LangGraph's prebuilt UI, accessible from PC). It should capture image one by one.
 **English Handwriting Recognition:**
 Automatically extract typed text (including digits, equations, and diagrams) from handwritten pictures using cutting-edge OCR. you should search for best open source(free) ocr engine for python. Equation must be also in Latex format. You must find best open source OCR engine for this task
 **Formatting & Structuring:**
