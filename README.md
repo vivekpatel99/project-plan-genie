@@ -4,7 +4,9 @@ An intelligent AI-powered project planning agent that transforms project descrip
 
 ## 🚀 Overview
 
-This project planning agent helps developers and teams break down complex project ideas into manageable, step-by-step implementation plans. By leveraging advanced AI agents and workflow orchestration, it generates detailed project roadmaps that can be directly used as GitHub issues, project boards, or documentation.
+This project planning agent helps developers and teams break down complex project ideas into manageable, step-by-step implementation plans. By leveraging advanced AI agents and workflow orchestration, it generates detailed project roadmap that can be directly used as GitHub issues, project boards, or documentation.
+
+![Architecture Diagram](docs/agent_graph.excalidraw.png)
 
 **Key Features:**
 
@@ -23,7 +25,7 @@ This project planning agent helps developers and teams break down complex projec
 
 ## 🏗️ Architecture
 
-![Architecture Diagram](assets/final_graph.png)
+![Graph](assets/final_graph.png)
 
 ### Core Components
 
