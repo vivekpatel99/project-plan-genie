@@ -1,5 +1,6 @@
 {
   "mcpServers": {
+   
       "filesystem": {
         "command": "docker",
         "args": [

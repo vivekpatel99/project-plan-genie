@@ -63,15 +63,14 @@ agent_builder = StateGraph(
 
 agent_builder.add_node("clarify_with_user", clarify_with_user)
 agent_builder.add_node("write_research_brief", write_research_brief)
+agent_builder.add_node("supervisor_subgraph", supervisor_subgraph)
 agent_builder.add_node("final_report_generation", final_report_graph)
 
-agent_builder.add_node("supervisor_subgraph", supervisor_subgraph)
 
 agent_builder.add_edge(START, "clarify_with_user")
 agent_builder.add_edge(
     "supervisor_subgraph",
     "final_report_generation",
 )
-# agent_builder.add_edge("final_report_generation", END)
 logger.info("Compiling Project Planning Genie...")
 project_planning_genie = agent_builder.compile(name="Project Planning Genie")

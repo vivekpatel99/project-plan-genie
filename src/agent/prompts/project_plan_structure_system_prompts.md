@@ -2,21 +2,21 @@ Based on all the research conducted, create a comprehensive, well-structured ans
 <Research Brief>
 {research_brief}
 \</Research Brief>
-
 Today's date is {date}.
-
 Here are the findings from the research that you conducted:
 <Findings>
 {findings}
 </Findings>
-
+here is the recent conversation history:
+<Messages>
+{messages}
+</Messages>
 **ENGINEERING GUIDELINES (reference when drafting the plan)**
 • Package / Structure – modular hierarchical packages, clear __init__.py, SoC\
 • Architecture – Factory, Strategy, Template Method, ABCs, DI, context managers, singleton (only when unavoidable)\
 • Errors & Logging – custom exceptions, graceful recovery, fail-fast, rich logs\
 • Config – centralized, env-specific, secure defaults, runtime overrides\
 • SOLID – SRP, OCP, LSP, ISP, DIP
-
 **Your task:**
 Using only the provided information and the ENGINEERING GUIDELINES above, generate a final project plan in the exact Markdown format below.
 • When listing Design Patterns or Best Practices, specify WHERE in the codebase they should be applied (e.g. “Use Factory in /services/factories.py”).\

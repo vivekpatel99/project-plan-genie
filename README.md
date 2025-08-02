@@ -105,3 +105,5 @@ This project planning agent helps developers and teams break down complex projec
 2. [Open Deep Research-Youtube](https://www.youtube.com/watch?v=agGiWUpxkhg)
 3. [LangGraph](https://github.com/langchain-ai/langgraph)
 4. https://github.com/kenneth-liao/human-in-the-loop/tree/main
+5. [KennyLio-MCP Tutorial](https://www.youtube.com/watch?v=Uft4VwGm5qs&t=1410s)
+6. [File System MCP Server](https://github.com/modelcontextprotocol/servers/tree/main/src/filesystem#docker)

@@ -143,7 +143,7 @@ async def research_tools(
             name=tool_call["name"],
             tool_call_id=tool_call["id"],
         )
-        for observation, tool_call in zip(observations, tool_calls, strict=False)
+        for observation, tool_call in zip(observations, tool_calls, strict=True)
     ]
     # Late Exit Criteria: We have exceeded our max guardrail tool call iterations or the most recent message contains ResearchComplete tool call
     # These are late exit criteria because we need to add ToolMessage

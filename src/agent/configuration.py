@@ -24,7 +24,8 @@ class Defaults(Enum):
     RESEARCH_MODEL: str = "openai:gpt-4o"
     COMPRESSION_MODEL: str = "openai:gpt-4o-mini"
     SUMMARIZATION_MODEL: str = "openai:gpt-4o-mini"
-    FINAL_REPORT_GENERATION_MODEL: str = "ollama:qwen3:8b"  # "openai:gpt-4.1"  #
+    FINAL_REPORT_GENERATION_MODEL: str = "openai:gpt-4o-mini"
+    MCP_TOOL_MANAGER_MODEL: str = "openai:gpt-4o-mini"  # ollama:qwen3:8b"
     SEARCH_API: SearchAPI = SearchAPI.TAVILY
 
 
@@ -221,6 +222,27 @@ class Configuration(BaseModel):
                 "type": "number",
                 "default": 10_000,
                 "description": "Maximum output tokens for final report model",
+            },
+        },
+    )
+    # --- MCP Tool Manager Model --------------------------------------------------------------------------
+    mcp_tool_manager_model: str = Field(
+        default=Defaults.MCP_TOOL_MANAGER_MODEL.value,
+        metadata={
+            "x_oap_ui_config": {
+                "type": "text",
+                "default": Defaults.MCP_TOOL_MANAGER_MODEL.value,
+                "description": "Model for managing the MCP tools",
+            },
+        },
+    )
+    mcp_tool_manager_max_tokens: int = Field(
+        default=10_000,
+        metadata={
+            "x_oap_ui_config": {
+                "type": "number",
+                "default": 10_000,
+                "description": "Maximum output tokens for MCP tool manager model",
             },
         },
     )
