@@ -161,7 +161,7 @@ async def tool_manager(state: ReportGeneratorState, config: RunnableConfig) -> d
         .with_retry(stop_after_attempt=config.max_structured_output_retries)
         .with_config(mcp_tool_manager_config)
     )
-    prompt = f"""here is the conversation so far
+    prompt = f"""Conversation history:
     <messages>
     {get_buffer_string(tool_manager_messages)}
     </messages>
@@ -212,11 +212,10 @@ async def mcp_tool_call(state: ReportGeneratorState, config: RunnableConfig) -> 
         await execute_tool_safely(tools_by_name[tool_call["name"]], tool_call["args"], config.model_dump())
         for tool_call in tool_calls
     ]
-    print("##############")
-    print(tool_results)
+
     tool_outputs: list[ToolMessage] = [
         ToolMessage(
-            content=f"Tool Response: {result}",
+            content=f"Successfully executed {tool_call['name']}: {result}",
             name=tool_call["name"],
             tool_call_id=tool_call["id"],
         )
@@ -231,7 +230,7 @@ async def mcp_tool_call(state: ReportGeneratorState, config: RunnableConfig) -> 
     )
 
 
-async def should_continue(state: ReportGeneratorState) -> Literal["human_tool_review_node", "__end__"]:
+async def should_continue(state: ReportGeneratorState) -> Literal["human_tool_review_node", "mcp_tool_call,__end__"]:
     logger.info("[INFO] Checking if we should continue...")
     messages = state.get(StatesKeys.TOOL_MANAGER_MESSAGES.value, [])
 
@@ -276,21 +275,23 @@ async def human_tool_review_node(
 
     human_feedback = human_review.get("feedback")
 
-    tool_call = last_message.tool_calls[-1]
-
-    tagged_feedback = f"<human_feedback>{human_feedback}</human_feedback>"
+    tagged_feedback = f"""HUMAN INTERVENTION: The user has rejected this tool call and provided new instructions.
+    User feedback: {human_feedback}
+    **IMPORTANT**: You must follow the user's instructions exactly. Do not repeat the rejected tool calls. Adapt your approach based on the feedback provided."""
 
     # Create the ToolMessage with the tagged content.
-    tool_message = ToolMessage(
-        content=tagged_feedback,
-        name=tool_call["name"],
-        tool_call_id=tool_call["id"],
-    )
-
+    tool_messages: list[ToolMessage] = [
+        ToolMessage(
+            tagged_feedback,
+            name=tool_call["name"],
+            tool_call_id=tool_call["id"],
+        )
+        for tool_call in tool_calls
+    ]
     return Command(
         goto="tool_manager",
         update={
-            StatesKeys.TOOL_MANAGER_MESSAGES.value: [tool_message],
+            StatesKeys.TOOL_MANAGER_MESSAGES.value: tool_messages,
         },
     )
 
@@ -315,3 +316,4 @@ builder.add_conditional_edges(
 
 
 final_report_graph = builder.compile(name="Final Report Generation")
+# {"action": "", "feedback": "No need to create directory, just save the file in root directory"}
