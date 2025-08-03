@@ -20,7 +20,7 @@ class SearchAPI(Enum):
 class Defaults(Enum):
     """all Defaults settings."""
 
-    CLARIFICATION_MODEL: str = "openai:gpt-4o"
+    CLARIFICATION_MODEL: str = "perplexity:sonar-pro"  # "sonar-pro"  # "sonar-reasoning"
     RESEARCH_MODEL: str = "openai:gpt-4o"
     COMPRESSION_MODEL: str = "openai:gpt-4o-mini"
     SUMMARIZATION_MODEL: str = "openai:gpt-4o-mini"
