@@ -33,12 +33,6 @@ protected_tools: tuple[str] = (
 # https://github.com/modelcontextprotocol/servers/tree/main/src/filesystem
 
 
-# Initialize a configurable model that we will use throughout the agent
-model_shell = init_chat_model(
-    configurable_fields=("model", "max_tokens"),
-)
-
-
 @logger.catch
 async def final_report_generation(
     state: ReportGeneratorState,
@@ -58,6 +52,12 @@ async def final_report_generation(
     research_brief = state[StatesKeys.RESEARCH_BRIEF.value]
 
     config = Configuration.from_runnable_config(config)
+
+    # Initialize a configurable model that we will use throughout the agent
+    model_shell = init_chat_model(
+        configurable_fields=("model", "max_tokens"),
+    )
+
     report_generator_config = {
         "model": config.final_report_generation_model,
         "max_tokens": config.final_report_generation_model_max_tokens,
@@ -146,11 +146,16 @@ async def tool_manager(state: ReportGeneratorState, config: RunnableConfig) -> d
     # print("[INFO] tool_manager_messages: ", tool_manager_messages)
     config = Configuration.from_runnable_config(config)
 
+    # Initialize a configurable model that we will use throughout the agent
+    model_shell = init_chat_model(
+        configurable_fields=("model", "max_tokens"),
+    )
+
     mcp_tool_manager_config = {
         "model": config.mcp_tool_manager_model,
         "max_tokens": config.mcp_tool_manager_max_tokens,
     }
-    logger.debug("Configuration for tool manager: {}", config)
+    logger.info("Configuration for tool manager: {}", config)
 
     max_retries: int = 3
     current_retry: int = 0
@@ -165,7 +170,7 @@ async def tool_manager(state: ReportGeneratorState, config: RunnableConfig) -> d
     <messages>
     {get_buffer_string(tool_manager_messages)}
     </messages>
-    here is the final report {final_report}"""
+    here is the final report \n{final_report}"""
     while current_retry <= max_retries:
         try:
             response = await tool_manager_model.ainvoke([HumanMessage(content=prompt)])
