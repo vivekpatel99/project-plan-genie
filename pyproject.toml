@@ -43,6 +43,7 @@ dependencies = [
     "langgraph-api>=0.2.3",
     "langgraph-sdk>=0.1.61",
     "langchain-ollama>=0.3.6",
+    "streamlit>=1.47.1",
 ]
 
 [project.optional-dependencies]

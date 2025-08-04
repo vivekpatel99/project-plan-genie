@@ -42,23 +42,3 @@ async def stream_graph_responses(
                 yield "\n".join(content)
             else:
                 yield str(content)
-
-
-# async def main():
-#     try:
-#         final_report_graph = await  builder.compile(name="Project Planning Genie")
-
-#         # Checkpointing and a thread_id are required for human-in-the-loop in Langgraph
-#         config = RunnableConfig(
-#             recursion_limit=25,
-#             configurable = {
-#                 "thread_id": "1"
-#             }
-#         )
-#         # Initial input
-#         graph_input = {
-#             "messages": [
-#                 HumanMessage(content="Briefly introduce yourself and offer to help me.")
-#             ],
-
-#         }

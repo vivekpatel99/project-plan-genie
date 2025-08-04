@@ -1,10 +1,11 @@
 You will be given a set of messages that have been exchanged so far between yourself and the user.
-Your job is to translate these messages into a more detailed and concrete research question that will be used to guide the SW design research.
-The messages that have been exchanged so far between yourself and the user are:
+Your job is to translate these messages into a more detailed and concrete research question that will be used to guide the solo developers plan high-quality GitHub portfolio projects planning research.
+**Message History:**
 <Messages>
 {messages}
 </Messages>
 Today's date is {date}.
+
 You will return a single research question that will be used to guide the research.
 Guidelines:
 

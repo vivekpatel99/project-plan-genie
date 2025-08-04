@@ -1,12 +1,15 @@
 # project-planning-genie
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python Version](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
+
 An intelligent AI-powered project planning agent that transforms project descriptions into comprehensive, actionable implementation plans. Built with LangGraph and multi-agent architecture to deliver structured markdown reports perfect for GitHub issues and project management.
 
 ## 🚀 Overview
 
 This project planning agent helps developers and teams break down complex project ideas into manageable, step-by-step implementation plans. By leveraging advanced AI agents and workflow orchestration, it generates detailed project roadmap that can be directly used as GitHub issues, project boards, or documentation.
 
-![Architecture Diagram](docs/agent_graph.excalidraw.png)
+![Architecture Diagram](assets/final_graph.png)
 
 **Key Features:**
 
@@ -25,32 +28,59 @@ This project planning agent helps developers and teams break down complex projec
 
 ## 🏗️ Architecture
 
-![Graph](assets/final_graph.png)
+The project is built on a multi-agent architecture orchestrated by LangGraph. Each agent has a specialized role, ensuring a clear separation of concerns and making the system modular and extensible.
 
 ### Core Components
 
 - **LangGraph StateGraph**: Orchestrates the multi-agent workflow
 - **Clarification Agent**: Handles requirement gathering and question generation
-- **Supervisor Agent**: Reviews conversation and orchestrates research Agents
-- **Research Agent**: Conducts in-depth research and analysis to support planning
+- **Supervisor Agent**: Reviews conversation and orchestrates Research Agents
+- **Research Agent**: Conducts in-depth research and analysis on technical topics to support planning.
 - **Report Generation Agent**: Formats the final output into markdown
 
 ## 🛠️ Technology Stack
 
-- **Framework**: LangGraph for agent orchestration
-- **Language**: Python 3.8+
-- **AI Models**: OpenAI GPT, Perplexity, and other LLM providers
-- **Testing**: pytest for unit and integration tests
+| Category          | Technology / Library | Justification                                                                    |
+| ----------------- | -------------------- | -------------------------------------------------------------------------------- |
+| **Orchestration** | LangGraph            | Provides a powerful way to build stateful, multi-agent applications with cycles. |
+| **Language**      | Python 3.13+         | Modern Python features and strong support for AI/ML libraries.                   |
+| **AI Models**     | OpenAI, Perplexity   | Access to powerful Large Language Models for generation and reasoning.           |
+| **Web Research**  | Tavily               | Specialized search API for AI agents, providing concise and relevant results.    |
+| **Logging**       | Loguru               | Simple and powerful logging for better debugging and monitoring.                 |
+| **Testing**       | pytest               | Standard for testing in the Python ecosystem, enabling robust test suites.       |
+| **Environment**   | uv, python-dotenv    | Fast, modern package management and easy handling of environment variables.      |
 
 ## 🎨 Project Structure
+
+```
+project-planning-genie/
+├── src/
+│   └── agent/
+│       ├── prompts/              # System prompts for agents
+│       │   ├── __init__.py
+│       │   └── *.md
+│       ├── __init__.py
+│       ├── configuration.py      # Configuration management
+│       ├── researcher_agent.py   # Research agent logic
+│       ├── supervisor_agent.py   # Supervisor agent logic
+│       └── ...                   # Other agent and core files
+├── assets/
+│   └── final_graph.png           # Architecture diagram
+├── docs/
+│   └── *.md
+├── tests/
+│   └── ...
+├── .env.example                  # Example environment file
+├── README.md
+└── uv.lock
+```
 
 ## 🚦 Getting Started
 
 ### Prerequisites
 
-- Python 3.8 or higher
-- API keys for chosen LLM providers
-- Git for version control
+- Python 3.13+
+- `uv` package manager (installation instructions)
 
 ### Quick Start
 
@@ -63,10 +93,9 @@ This project planning agent helps developers and teams break down complex projec
 
 2. **Create and Activate Virtual Environment (using `uv`)/Setup Project Environment:**
 
-   *First, ensure you have `uv` installed. If not, follow the instructions here.*
-
    ```bash
-   # uv will create a virtual environment named .venv and install dependencies
+   # This command creates a virtual environment in .venv if it doesn't exist,
+   # and installs the dependencies specified in pyproject.toml
    uv sync
    ```
 
@@ -74,12 +103,12 @@ This project planning agent helps developers and teams break down complex projec
 
    - **`.env` file (Recommended for Local Development)**
 
-     - Create a `.env` file in the project root.
+     - Create a `.env` file in the project root by copying the example: `cp .env.example .env`
      - Add your credentials and configurations:
 
      ```dotenv
         # .env
-        TAVILY_API_KEY=
+        TAVILY_API_KEY=your_tavily_api_key
         LANGCHAIN_API_KEY=
         OPENAI_API_KEY=
 
@@ -87,15 +116,22 @@ This project planning agent helps developers and teams break down complex projec
         LANGCHAIN_TRACING_V2=true
      ```
 
-     - add following line to your vs code settings.json to automatically load the `.env` file:
+     - To have VS Code automatically load the `.env` file, add the following line to your `.vscode/settings.json`:
 
      ```json
      "python.envFile": "${workspaceFolder}/.env"
      ```
 
+### Usage
+
+```bash
+# Run the main application (update with your actual entry point)
+streamlit run frontend.genie.py
+```
+
 ## 🔮 Future Enhancements
 
-- **GitHub Integration**: Automatically create issues and pull requests from generated plans
+- **GitHub Integration**: Automatically create issues and pull requests from generated plans (If human approves)
 - **User Feedback Loop**: Incorporate user feedback to improve task generation
 - **Performance Analytics**: Track token usage, response times, and accuracy metrics
 
