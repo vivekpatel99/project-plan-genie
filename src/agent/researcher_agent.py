@@ -208,6 +208,7 @@ async def compress_research(state: ResearchState, config: RunnableConfig) -> dic
             response = await compression_model.ainvoke(
                 researcher_msgs,
             )
+            logger.debug("Compressed research content: {}", response.content)
             return {
                 StatesKeys.COMPRESSED_RESEARCH.value: str(response.content),
                 StatesKeys.RAW_NOTES.value: [
@@ -216,7 +217,6 @@ async def compress_research(state: ResearchState, config: RunnableConfig) -> dic
                     ),
                 ],
             }
-            logger.debug("Research brief created: {}", response.research_brief)
         except Exception as e:
             synthesize_attempts += 1
             if is_token_limit_exceeded(e, config.research_model):

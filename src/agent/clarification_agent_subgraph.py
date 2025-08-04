@@ -5,7 +5,8 @@ from typing import Literal
 from langchain.chat_models import init_chat_model
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, get_buffer_string
 from langchain_core.runnables import RunnableConfig
-from langgraph.graph import END
+from langgraph.func import START
+from langgraph.graph import END, StateGraph
 from langgraph.types import Command
 from loguru import logger
 
@@ -16,9 +17,7 @@ try:
         LEAD_RESEARCHER_PROMPT,
         TRANSFORM_MESSAGES_INTO_RESEARCH_TOPIC_PROMPT,
     )
-    from .states import AgentState, ClarifyWithUser, ResearchQuestion, StatesKeys
-
-    # from .supervisor_agent import supervisor_subgraph
+    from .states import AgentInputState, AgentState, ClarifyWithUser, ResearchQuestion, StatesKeys
     from .utils import get_today_str
 except ImportError:
     import rootutils
@@ -30,9 +29,7 @@ except ImportError:
         LEAD_RESEARCHER_PROMPT,
         TRANSFORM_MESSAGES_INTO_RESEARCH_TOPIC_PROMPT,
     )
-    from src.agent.states import AgentState, ClarifyWithUser, ResearchQuestion, StatesKeys
-
-    # from src.agent.supervisor_agent import supervisor_subgraph
+    from src.agent.states import AgentInputState, AgentState, ClarifyWithUser, ResearchQuestion, StatesKeys
     from src.agent.utils import get_today_str
 
 # Initialize a configurable model that we will use throughout the agent
@@ -150,17 +147,17 @@ async def write_research_brief(state: AgentState, config: RunnableConfig) -> Com
     )
 
 
-# clarify_builder = StateGraph(
-#     AgentState,
-#     input_schema=AgentInputState,
-#     config_schema=Configuration,
-# )
+clarify_builder = StateGraph(
+    AgentState,
+    input_schema=AgentInputState,
+    config_schema=Configuration,
+)
 
-# clarify_builder.add_node("clarify_with_user", clarify_with_user)
-# clarify_builder.add_node("write_research_brief", write_research_brief)
+clarify_builder.add_node("clarify_with_user", clarify_with_user)
+clarify_builder.add_node("write_research_brief", write_research_brief)
 
-# clarify_builder.add_edge(START, "clarify_with_user")
-# clarify_builder.add_edge("clarify_with_user", "write_research_brief")
-# clarify_builder.add_edge("write_research_brief", END)
+clarify_builder.add_edge(START, "clarify_with_user")
+clarify_builder.add_edge("clarify_with_user", "write_research_brief")
+clarify_builder.add_edge("write_research_brief", END)
 
 # clarify_subgraph = clarify_builder.compile(name="Clarify with User")

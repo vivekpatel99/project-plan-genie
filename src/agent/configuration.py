@@ -20,13 +20,13 @@ class SearchAPI(Enum):
 class Defaults(Enum):
     """all Defaults settings."""
 
-    CLARIFICATION_MODEL: str = "perplexity:sonar-pro"  # "sonar-pro"  # "sonar-reasoning"
-    RESEARCH_MODEL: str = "openai:gpt-4o"
-    COMPRESSION_MODEL: str = "openai:gpt-4o-mini"
-    SUMMARIZATION_MODEL: str = "openai:gpt-4o-mini"
-    FINAL_REPORT_GENERATION_MODEL: str = "openai:gpt-4o-mini"
+    CLARIFICATION_MODEL: str = "ollama:qwen2.5:14b"  # "perplexity:sonar-pro"  # "sonar-pro"  # "sonar-reasoning"
+    RESEARCH_MODEL: str = "ollama:qwen2.5:14b"  # "openai:gpt-4o"
+    COMPRESSION_MODEL: str = "ollama:qwen2.5:14b"  # "openai:gpt-4o-mini"
+    SUMMARIZATION_MODEL: str = "ollama:qwen2.5:14b"  # openai:gpt-4o-mini"
+    FINAL_REPORT_GENERATION_MODEL: str = "ollama:qwen2.5:14b2 # openai:gpt-4o"
     MCP_TOOL_MANAGER_MODEL: str = (
-        "openai:gpt-4o-mini"  # "ollama:qwen3:14b"  # ollama:mixtral:8x7b"  # "ollama:qwen3:8b"
+        "ollama:qwen2.5:14b"  # "openai:gpt-4o-mini"  # "ollama:qwen3:14b"  # ollama:mixtral:8x7b"  # "ollama:qwen3:8b"
     )
     SEARCH_API: SearchAPI = SearchAPI.TAVILY
 
@@ -175,7 +175,7 @@ class Configuration(BaseModel):
         },
     )
     summarization_model_max_tokens: int = Field(
-        default=8192,
+        default=10_000,
         metadata={
             "x_oap_ui_config": {
                 "type": "number",

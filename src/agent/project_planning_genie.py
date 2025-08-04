@@ -73,4 +73,4 @@ agent_builder.add_edge(
     "final_report_generation",
 )
 logger.info("Compiling Project Planning Genie...")
-project_planning_genie = agent_builder.compile(name="Project Planning Genie")
+project_planning_genie_graph = agent_builder.compile(name="Project Planning Genie")

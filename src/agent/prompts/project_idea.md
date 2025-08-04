@@ -20,3 +20,9 @@ Agent 2: Text cleanup, markdown formatting, and Notion posting
 Leverage LangGraph's prebuilt UI for smooth agent interaction from a PC browser, more information about open agent platform for ui 'https://docs.oap.langchain.com/quickstart'.
 **Python First:**
 Entire codebase written in Python, using established libraries for AI, vision, and web connectivity.
+
+- you must select clean architecture and SOLID principles and decide where to use which principles for this project
+- you must select best testing strategy for this project
+- you must decide better architecture style, such as a microservice-style modular backend, a monolith and so on
+- use model can be easily swappable to keep up with the latest developments in AI technology
+- it is personal project for personal portfolio development so good readme with proper diagram (visualization) is required. so anybody can easily understand your project idea and workflow.
