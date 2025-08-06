@@ -88,10 +88,10 @@ async def stream_graph_responses(
                     thoughts = parts[1::2]
                     if thoughts:
                         status.markdown(f"🤔 {thoughts[0]}")
-                    yield reply
+                        # Update status display
+                        status.update(label="Complete!", state="complete", expanded=False)
 
-        # Update status display
-        status.update(label="Complete!", state="complete", expanded=False)
+                    yield reply
 
 
 if prompt := st.chat_input("Please Write Detail Project Description"):

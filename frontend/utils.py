@@ -1,4 +1,3 @@
-import asyncio
 from typing import Literal
 
 import rootutils
@@ -69,7 +68,7 @@ async def test_graph_builder() -> StateGraph:
 
     tools = await client.get_tools()
 
-    llm = ChatOllama(model="qwen3:14b", temperature=0).bind_tools(tools)
+    llm = ChatOllama(name="qwen", model="qwen3:14b", temperature=0).bind_tools(tools)
 
     def human_tool_review_node(
         state: States,
@@ -141,4 +140,4 @@ async def test_graph_builder() -> StateGraph:
     return builder.compile(checkpointer=MemorySaver())
 
 
-test_graph = asyncio.run(test_graph_builder())
+# test_graph = asyncio.run(test_graph_builder())
