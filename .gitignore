@@ -211,3 +211,4 @@ src/agent/prompts/project_plan_structure_system_filesystem_prompts_test.md
 src/agent/final_report_generation.py
 .continue/mcpServers/context7.yaml
 tests.md
+frontend/test_messages.py
