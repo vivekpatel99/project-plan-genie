@@ -4,22 +4,21 @@ from typing import Literal
 from langchain.chat_models import init_chat_model
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage, get_buffer_string
 from langchain_core.runnables import RunnableConfig
-from langchain_mcp_adapters.client import MultiServerMCPClient
-from langgraph.func import END, Any
+from langgraph.func import END, Any, CachePolicy
 from langgraph.graph import START, StateGraph
 from langgraph.types import Command, interrupt
 from loguru import logger
 
 try:
     from .configuration import Configuration
-    from .my_mcps import mcp_config
+    from .mcp_tool_service import MCPToolService
     from .prompts import SYSTEM_PROMPT_PROJECT_PLAN_STRUCTURE, TOOL_MANAGER_PROMPT
     from .states import ReportGeneratorState, StatesKeys
     from .utils import execute_tool_safely, get_today_str
 except ImportError:
     # rootutils.setup_root(__file__, indicator=".git", pythonpath=True)
     from src.agent.configuration import Configuration
-    from src.agent.my_mcps import mcp_config
+    from src.agent.mcp_tool_service import MCPToolService
     from src.agent.prompts import SYSTEM_PROMPT_PROJECT_PLAN_STRUCTURE, TOOL_MANAGER_PROMPT
     from src.agent.states import ReportGeneratorState, StatesKeys
     from src.agent.utils import execute_tool_safely, get_today_str
@@ -31,13 +30,14 @@ protected_tools: tuple[str] = (
     "write_file",
 )
 # https://github.com/modelcontextprotocol/servers/tree/main/src/filesystem
+mcp_tool_service = MCPToolService()
 
 
 @logger.catch
 async def final_report_generation(
     state: ReportGeneratorState,
     config: RunnableConfig,
-) -> Command[Literal["get_mcp_tools_node"]]:
+) -> Command[Literal["tool_manager"]]:
     """
     Generate final report from the  research notes and findings.
 
@@ -85,7 +85,7 @@ async def final_report_generation(
 
             logger.info("Final report generated: {}", response)
             return Command(
-                goto="get_mcp_tools_node",
+                goto="tool_manager",
                 update={
                     StatesKeys.TOOL_MANAGER_MESSAGES.value: [
                         SystemMessage(content=TOOL_MANAGER_PROMPT),
@@ -109,30 +109,30 @@ async def final_report_generation(
     )
 
 
-@logger.catch
-async def get_mcp_tools_node(
-    state: ReportGeneratorState,  # noqa: ARG001
-    config: RunnableConfig,  # # noqa: ARG001
-) -> Command[Literal["tool_manager"]]:
-    """
-    Get all the available tools on the MCP servers.
+# @logger.catch
+# async def get_mcp_tools_node(
+#     state: ReportGeneratorState,
+#     config: RunnableConfig,  #
+# ) -> Command[Literal["tool_manager"]]:
+#     """
+#     Get all the available tools on the MCP servers.
 
-    Args:
-        state (Report generation state): Unused
-        config (Runnable configuration): Unused
+#     Args:
+#         state (Report generation state): Unused
+#         config (Runnable configuration): Unused
 
-    Returns:
-        list[ToolMessage]: List of all available tools
+#     Returns:
+#         list[ToolMessage]: List of all available tools
 
-    Note: The parameters 'state' and 'config' are not used in this implementation but kept to satisfy langgraph requirements
+#     Note: The parameters 'state' and 'config' are not used in this implementation but kept to satisfy langgraph requirements
 
-    """
-    logger.info("Getting MCP tools...")
-    client = MultiServerMCPClient(connections=mcp_config["mcpServers"])
-    tools = await client.get_tools()
-    tools_by_name = {tool.name: tool for tool in tools if hasattr(tool, "name")}
+#     """
+#     logger.info("Getting MCP tools...")
+#     client = MultiServerMCPClient(connections=mcp_config["mcpServers"])
+#     tools = await client.get_tools()
+#     tools_by_name = {tool.name: tool for tool in tools if hasattr(tool, "name")}
 
-    return Command(goto="tool_manager", update={"mcp_tools": tools, "mcp_tools_by_name": tools_by_name})
+#     return Command(goto="tool_manager", update={"mcp_tools": tools, "mcp_tools_by_name": tools_by_name})
 
 
 @logger.catch
@@ -142,8 +142,7 @@ async def tool_manager(state: ReportGeneratorState, config: RunnableConfig) -> d
 
     final_report = state.get(StatesKeys.FINAL_REPORT.value)
     tool_manager_messages = state.get(StatesKeys.TOOL_MANAGER_MESSAGES.value, [])
-    # print("######################")
-    # print("[INFO] tool_manager_messages: ", tool_manager_messages)
+
     config = Configuration.from_runnable_config(config)
 
     # Initialize a configurable model that we will use throughout the agent
@@ -160,7 +159,8 @@ async def tool_manager(state: ReportGeneratorState, config: RunnableConfig) -> d
     max_retries: int = 3
     current_retry: int = 0
 
-    tools = state["mcp_tools"]
+    # Get actual tools from the service
+    tools, _ = await mcp_tool_service.get_tools()
     tool_manager_model = (
         model_shell.bind_tools(tools)
         .with_retry(stop_after_attempt=config.max_structured_output_retries)
@@ -207,7 +207,7 @@ async def mcp_tool_call(state: ReportGeneratorState, config: RunnableConfig) -> 
     config = Configuration.from_runnable_config(config)
 
     # tools = state["mcp_tools"]
-    tools_by_name = state["mcp_tools_by_name"]
+    _, tools_by_name = await mcp_tool_service.get_tools()
 
     last_message = messages[-1]
     tool_calls = last_message.tool_calls
@@ -235,7 +235,7 @@ async def mcp_tool_call(state: ReportGeneratorState, config: RunnableConfig) -> 
     )
 
 
-async def should_continue(state: ReportGeneratorState) -> Literal["human_tool_review_node", "mcp_tool_call,__end__"]:
+async def should_continue(state: ReportGeneratorState) -> Literal["human_tool_review_node", "mcp_tool_call", "__end__"]:
     logger.info("[INFO] Checking if we should continue...")
     messages = state.get(StatesKeys.TOOL_MANAGER_MESSAGES.value, [])
 
@@ -302,10 +302,9 @@ async def human_tool_review_node(
 
 
 builder = StateGraph(ReportGeneratorState, config_schema=Configuration)
-builder.add_node("final_report_generation", final_report_generation)
+builder.add_node("final_report_generation", final_report_generation, cache_policy=CachePolicy())
 builder.add_node("human_tool_review_node", human_tool_review_node)
-builder.add_node("get_mcp_tools_node", get_mcp_tools_node)
-builder.add_node("tool_manager", tool_manager)
+builder.add_node("tool_manager", tool_manager, cache_policy=CachePolicy())
 builder.add_node("mcp_tool_call", mcp_tool_call)
 
 builder.add_edge(START, "final_report_generation")

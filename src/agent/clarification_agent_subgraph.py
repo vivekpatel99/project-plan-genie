@@ -69,6 +69,7 @@ async def clarify_with_user(
     model_config = {
         "model": config.clarification_model,
         "max_tokens": config.clarification_model_max_tokens,
+        "name": "Genie",
         # "api_key": config.clarification_model_api_key,
     }
     logger.debug("Model configuration for clarification: {}", model_config)
@@ -77,16 +78,27 @@ async def clarify_with_user(
         .with_retry(stop_after_attempt=config.max_structured_output_retries)
         .with_config(model_config)
     )
-    response: ClarifyWithUser = await model.ainvoke(
-        [
-            HumanMessage(
-                content=CLARIFY_WITH_USER_INSTRUCTIONS.format(
-                    messages=get_buffer_string(messages),
-                    date=get_today_str(),
-                ),
-            ),
-        ],
-    )
+    synthesize_attempts = 0
+    while synthesize_attempts < config.clarification_attempts:
+        try:
+            response: ClarifyWithUser = await model.ainvoke(
+                [
+                    HumanMessage(
+                        content=CLARIFY_WITH_USER_INSTRUCTIONS.format(
+                            messages=get_buffer_string(messages),
+                            date=get_today_str(),
+                        ),
+                    ),
+                ],
+            )
+        except Exception as e:
+            logger.error(e)
+            synthesize_attempts += 1
+            logger.warning("Attempts: " + str(synthesize_attempts) + ". Retrying...")
+            print("Attempts: " + str(synthesize_attempts) + ". Retrying...")
+            if synthesize_attempts == config.clarification_attempts:
+                logger.error("Failed to synthesize response after " + str(synthesize_attempts) + " attempts.")
+                raise
     if response.need_clarification:
         logger.info("User needs clarification.")
         return Command(
@@ -150,7 +162,7 @@ async def write_research_brief(state: AgentState, config: RunnableConfig) -> Com
 clarify_builder = StateGraph(
     AgentState,
     input_schema=AgentInputState,
-    config_schema=Configuration,
+    context_schema=Configuration,
 )
 
 clarify_builder.add_node("clarify_with_user", clarify_with_user)

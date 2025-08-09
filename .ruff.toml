@@ -115,12 +115,11 @@ lint.ignore = [
     "FA102",   # Flake8-future-annotations - Missing `from __future__ import annotations`, but uses PEP 604 union
     "B904",    # Checks for raise statements in exception handlers that lack a from clause.
     "F403",    # Checks for the use of wildcard imports.
-    # "COM812",  # Missing trailing comma
-    "TD002",  # Missing author in TODO
-    "TD003",  # Missing issue link on TODO
-    "FIX002", # Line contains TODO
-    "BLE001", # Exception not handled
-    "S101",   # Use of assert statements detected.
+    "TD002",   # Missing author in TODO
+    "TD003",   # Missing issue link on TODO
+    "FIX002",  # Line contains TODO
+    "BLE001",  # Exception not handled
+    "S101",    # Use of assert statements detected.
 
 ]
 [format]

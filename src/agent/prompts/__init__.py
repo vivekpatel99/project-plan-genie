@@ -254,7 +254,7 @@ def read_prompt(file_name: str, prompt_dir: Path = Path(__file__).parent) -> str
 
 CLARIFY_WITH_USER_INSTRUCTIONS = read_prompt(file_name="clarify_with_user_system_prompt")
 
-SYSTEM_PROMPT_PROJECT_PLAN_STRUCTURE = read_prompt(file_name="project_plan_structure_system_prompts")
+SYSTEM_PROMPT_PROJECT_PLAN_STRUCTURE = read_prompt(file_name="system_prompt_project_plan_structure")
 
 TRANSFORM_MESSAGES_INTO_RESEARCH_TOPIC_PROMPT = read_prompt(file_name="transform_messages_into_research_topic_prompt")
 

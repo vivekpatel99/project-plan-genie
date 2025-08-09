@@ -49,7 +49,7 @@ config = {
 logger.configure(**config)
 
 logger.info("Initializing Project Planning Genie...")
-supervisor_builder = StateGraph(SupervisorState, config_schema=Configuration)
+supervisor_builder = StateGraph(SupervisorState, context_schema=Configuration)
 supervisor_builder.add_node("supervisor", supervisor)
 supervisor_builder.add_node("supervisor_tool", supervisor_tool)
 supervisor_builder.add_edge(START, "supervisor")
@@ -58,7 +58,7 @@ supervisor_subgraph = supervisor_builder.compile(name="Supervisor")
 agent_builder = StateGraph(
     AgentState,
     input_schema=AgentInputState,
-    config_schema=Configuration,
+    context_schema=Configuration,
 )
 
 agent_builder.add_node("clarify_with_user", clarify_with_user)

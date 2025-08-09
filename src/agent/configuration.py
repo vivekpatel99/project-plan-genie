@@ -20,14 +20,22 @@ class SearchAPI(Enum):
 class Defaults(Enum):
     """all Defaults settings."""
 
-    CLARIFICATION_MODEL: str = "ollama:qwen2.5:14b"  # "perplexity:sonar-pro"  # "sonar-pro"  # "sonar-reasoning"
-    RESEARCH_MODEL: str = "ollama:qwen2.5:14b"  # "openai:gpt-4o"
-    COMPRESSION_MODEL: str = "ollama:qwen2.5:14b"  # "openai:gpt-4o-mini"
-    SUMMARIZATION_MODEL: str = "ollama:qwen2.5:14b"  # openai:gpt-4o-mini"
-    FINAL_REPORT_GENERATION_MODEL: str = "ollama:qwen2.5:14b2 # openai:gpt-4o"
-    MCP_TOOL_MANAGER_MODEL: str = (
-        "ollama:qwen2.5:14b"  # "openai:gpt-4o-mini"  # "ollama:qwen3:14b"  # ollama:mixtral:8x7b"  # "ollama:qwen3:8b"
-    )
+    # CLARIFICATION_MODEL: str = "ollama:qwen2.5:14b"  # "perplexity:sonar-pro"  # "sonar-pro"  # "sonar-reasoning"
+    # RESEARCH_MODEL: str = "ollama:qwen2.5:14b"  # "openai:gpt-4o"
+    # COMPRESSION_MODEL: str = "ollama:qwen2.5:14b"  # "openai:gpt-4o-mini"
+    # SUMMARIZATION_MODEL: str = "ollama:qwen2.5:14b"  # openai:gpt-4o-mini"
+    # FINAL_REPORT_GENERATION_MODEL: str = "ollama:qwen2.5:14b2 # openai:gpt-4o"
+    # MCP_TOOL_MANAGER_MODEL: str = (
+    #     "ollama:qwen2.5:14b"  # "openai:gpt-4o-mini"  # "ollama:qwen3:14b"  # ollama:mixtral:8x7b"  # "ollama:qwen3:8b"
+    # )
+    # Only For Testing
+    CLARIFICATION_MODEL: str = "gpt-4.1-mini-2025-04-14"
+    RESEARCH_MODEL: str = "gpt-4.1-mini-2025-04-14"
+    COMPRESSION_MODEL: str = "gpt-4.1-mini-2025-04-14"
+    SUMMARIZATION_MODEL: str = "gpt-4.1-mini-2025-04-14"
+    FINAL_REPORT_GENERATION_MODEL: str = "ollama:qwen2.5:14b"  # "gpt-4.1-mini-2025-04-14"
+    MCP_TOOL_MANAGER_MODEL: str = "ollama:qwen2.5:14b"  # gpt-4.1-mini-2025-04-14"
+
     SEARCH_API: SearchAPI = SearchAPI.TAVILY
 
 
@@ -52,6 +60,16 @@ class Configuration(BaseModel):
                 "type": "number",
                 "default": 10_000,
                 "description": "Maximum output tokens for research model",
+            },
+        },
+    )
+    clarification_attempts: int = Field(
+        default=3,
+        metadata={
+            "x_oap_ui_config": {
+                "type": "number",
+                "default": 3,
+                "description": "How many times to attempt clarification by the model before giving up",
             },
         },
     )

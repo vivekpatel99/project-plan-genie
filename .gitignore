@@ -212,3 +212,5 @@ src/agent/final_report_generation.py
 .continue/mcpServers/context7.yaml
 tests.md
 frontend/test_messages.py
+.langchain.db
+exp/
