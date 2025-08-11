@@ -33,8 +33,8 @@ class Defaults(Enum):
     RESEARCH_MODEL: str = "gpt-4.1-mini-2025-04-14"
     COMPRESSION_MODEL: str = "gpt-4.1-mini-2025-04-14"
     SUMMARIZATION_MODEL: str = "gpt-4.1-mini-2025-04-14"
-    FINAL_REPORT_GENERATION_MODEL: str = "ollama:qwen2.5:14b"  # "gpt-4.1-mini-2025-04-14"
-    MCP_TOOL_MANAGER_MODEL: str = "ollama:qwen2.5:14b"  # gpt-4.1-mini-2025-04-14"
+    FINAL_REPORT_GENERATION_MODEL: str = "google_genai:gemini-2.0-flash"  # "ollama:qwen2.5:14b"  # "gpt-4.1-mini-2025-04-14"  # "ollama:qwen2.5:14b"  # "gpt-4.1-mini-2025-04-14"
+    MCP_TOOL_MANAGER_MODEL: str = "google_genai:gemini-2.0-flash"  # "ollama:qwen2.5:14b"  # gpt-4.1-mini-2025-04-14"
 
     SEARCH_API: SearchAPI = SearchAPI.TAVILY
 
