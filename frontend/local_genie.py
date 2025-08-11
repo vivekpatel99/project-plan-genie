@@ -9,10 +9,7 @@ from collections.abc import AsyncGenerator
 from typing import Any
 
 import rootutils
-from langchain_community.cache import SQLiteCache
-from langchain_core.globals import set_llm_cache
-from langchain_core.messages import AIMessageChunk, HumanMessage
-from langgraph.cache.memory import InMemoryCache
+from langchain_core.messages import AIMessageChunk, HumanMessage, ToolCallChunk
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.types import Command
@@ -25,7 +22,7 @@ from frontend.utils import final_report_generation_input, setup_logging  # noqa:
 from src.agent.final_report_generation import builder  # noqa: E402
 from src.agent.states import ClarifyWithUser, ReportGeneratorState  # noqa: E402
 
-set_llm_cache(SQLiteCache(database_path=".langchain.db"))
+# set_llm_cache(SQLiteCache(database_path=".langchain.db"))
 THINK_REGEX = r"<think>(.*?)</think>"
 
 #         graph_input = AgentState(
@@ -54,6 +51,7 @@ THINK_REGEX = r"<think>(.*?)</think>"
 # **Python First:**
 # Entire codebase written in Python, using established libraries for AI, vision, and web connectivity.
 
+
 # - you must select clean architecture and SOLID principles and decide where to use which principles for this project
 # - you must select best testing strategy for this project
 # - you must decide better architecture style, such as a microservice-style modular backend, a monolith and so on
@@ -63,6 +61,19 @@ THINK_REGEX = r"<think>(.*?)</think>"
 #                 ),
 #             ],
 #         )
+async def process_tool_call_chunk(chunk: ToolCallChunk):
+    """Process a tool call chunk and return a formatted string."""
+    tool_call_str = ""
+
+    tool_name = chunk.get("name", "")
+    args = chunk.get("args", "")
+
+    if tool_name:
+        tool_call_str += f"\n\n< TOOL CALL: {tool_name} >\n\n"
+    if args:
+        tool_call_str += args
+
+    return tool_call_str
 
 
 @logger.catch
@@ -72,39 +83,51 @@ async def stream_graph_responses(
     graph: CompiledStateGraph,
     config: dict[str, Any],
 ) -> AsyncGenerator[tuple[str, str]]:
+    """
+    Stream messages from a LangGraph agent, separating updates and messages.
+
+    When the agent makes a tool call, yields a message like "< TOOL CALL: tool_name >".
+    Otherwise, yields the message content.
+
+    Args:
+        user_input: The input to the agent.
+        graph: The agent to stream messages from.
+        config: The configuration to use when streaming messages.
+
+    Yields:
+        A tuple of (message, subgraph_name), where message is the message to display and
+        subgraph_name is the name of the subgraph that the message belongs to.
+
+    """
     async for stream_mode, message_chunk in graph.astream(
         input=user_input,
         config=config,
         stream_mode=["updates", "messages"],
+        # subgraphs=True,
     ):
         if stream_mode == "updates" and isinstance(message_chunk, dict):
             keys = list(message_chunk.keys())
             subgraph_name = keys[0]
             print(f"\n\n------------------{subgraph_name} subgraph------------------\n\n")
-            yield "\n\n", subgraph_name
-        if stream_mode == "messages":  # TODO: grab graph name here and use token streaming from messages
+            yield "", subgraph_name
+
+        if stream_mode == "messages":
             message, metadata = message_chunk
             subgraph_name = metadata["langgraph_node"]
             if isinstance(message, AIMessageChunk):
-                if message.response_metadata:
-                    finish_reason = message.response_metadata.get("finish_reason", "")
-                    if finish_reason == "tool_calls":
-                        yield "\n\n", subgraph_name
+                # if message.response_metadata:
+                #     finish_reason = message.response_metadata.get("finish_reason", "")
+                #     if finish_reason == "tool_calls":
+                #         yield "", subgraph_name
 
-                if message.tool_call_chunks:
-                    tool_chunk = message.tool_call_chunks[0]
+                # if message.tool_call_chunks:  # Grab Tool calls
+                #     tool_chunk = message.tool_call_chunks[0]
+                #     tool_call_str = await process_tool_call_chunk(tool_chunk)  # format tool call
+                #     yield tool_call_str, subgraph_name
 
-                    tool_name = tool_chunk.get("name", "")
-                    args = tool_chunk.get("args", "")
-
-                    if tool_name:
-                        tool_call_str = f"\n\n< TOOL CALL: {tool_name} >\n\n"
-                    if args:
-                        tool_call_str = args
-
-                    yield tool_call_str, subgraph_name
-                else:
-                    yield message.content, subgraph_name
+                # else:
+                # No tool calls, just yield the message content
+                yield message.content, subgraph_name
 
 
 async def handle_clarification(graph: CompiledStateGraph, config: dict, full_response: str) -> dict:  # noqa: ARG001
@@ -167,7 +190,7 @@ async def main() -> None:
         graph = builder.compile(
             name="Final Report Generation",
             checkpointer=MemorySaver(),
-            cache=InMemoryCache(),
+            # cache=InMemoryCache(),
         )  # test_graph_builder()
 
         # Clarification with User Graph
