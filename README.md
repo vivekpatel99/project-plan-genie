@@ -2,6 +2,8 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python Version](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Linter: Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
 An intelligent AI-powered project planning agent that transforms project descriptions into comprehensive, actionable implementation plans. Built with LangGraph and multi-agent architecture to deliver structured markdown reports perfect for GitHub issues and project management.
 
@@ -30,13 +32,18 @@ This project planning agent helps developers and teams break down complex projec
 
 The project is built on a multi-agent architecture orchestrated by LangGraph. Each agent has a specialized role, ensuring a clear separation of concerns and making the system modular and extensible.
 
-### Core Components
+## ✨ Example Outputs
 
-- **LangGraph StateGraph**: Orchestrates the multi-agent workflow
-- **Clarification Agent**: Handles requirement gathering and question generation
-- **Supervisor Agent**: Reviews conversation and orchestrates Research Agents
-- **Research Agent**: Conducts in-depth research and analysis on technical topics to support planning.
-- **Report Generation Agent**: Formats the final output into markdown
+You can find more generated project plans in the [`generated_examples/`](./generated_examples/) directory. Here is a direct link to one of them:
+
+- **Agent-Powered AI Note-Taking App**: A comprehensive plan for building an AI note-taking application with a focus on clean architecture and modern engineering practices.
+
+### Agent Workflow
+
+1. **Clarification Agent**: The first point of contact. It analyzes the user's initial request to determine if it's clear enough for planning. If not, it generates clarifying questions to resolve ambiguities before proceeding.
+2. **Supervisor Agent**: Acts as the project manager. It receives the clarified request, breaks it down into smaller research topics, and dispatches tasks to the Research Agents. It reviews the research findings to decide if more information is needed or if planning can commence.
+3. **Research Agent**: Executes deep research on specific topics assigned by the Supervisor. It uses tools like Tavily to search the web for best practices, technology stacks, and architectural patterns.
+4. **Report Generation Agent**: The final step. It synthesizes all the research findings into a comprehensive, well-structured markdown document, following the format defined in the `system_prompt_project_plan_structure.md`.
 
 ## 🛠️ Technology Stack
 
@@ -126,7 +133,7 @@ project-planning-genie/
 
 ```bash
 # Run the main application (update with your actual entry point)
-streamlit run frontend.genie.py
+langgraph dev # select project_planning_genie graph
 ```
 
 ## 🔮 Future Enhancements
