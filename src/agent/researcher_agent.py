@@ -6,6 +6,7 @@ from typing import Literal
 from langchain.chat_models import init_chat_model
 from langchain_core.messages import HumanMessage, SystemMessage, ToolMessage, filter_messages
 from langchain_core.runnables import RunnableConfig
+from langgraph.func import CachePolicy
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.types import Command
@@ -235,8 +236,8 @@ async def compress_research(state: ResearchState, config: RunnableConfig) -> dic
 
 logger.info("Research agent subgraph initialized.")
 research_builder = StateGraph(ResearchState, output_schema=ResearcherOutputState, config_schema=Configuration)
-research_builder.add_node("research_agent", research_agent)
-research_builder.add_node("research_tools", research_tools)
+research_builder.add_node("research_agent", research_agent, cache_policy=CachePolicy())
+research_builder.add_node("research_tools", research_tools, cache_policy=CachePolicy())
 research_builder.add_node("compress_research", compress_research)
 
 research_builder.add_edge(START, "research_agent")

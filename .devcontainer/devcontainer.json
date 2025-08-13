@@ -1,7 +1,7 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the
 // README at: https://github.com/devcontainers/templates/tree/main/src/python
 {
-	"name": "project-prlanning-genie",
+	"name": "project-planing-genie",
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
 	// "image": "mcr.microsoft.com/devcontainers/python:3.13-bookworm",
 	"build": {
@@ -9,8 +9,13 @@
 		"dockerfile": "../Dockerfile"
 	},
 	// Features to add to the dev container. More info: https://containers.dev/features.
-	// "features": {},
-
+	"features": {        
+		"ghcr.io/devcontainers/features/node:1": {
+            "version": "20",
+            "nvmVersion": "latest",
+            "installYarnUsingApt": true
+        }
+	},
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
 	"customizations": {
@@ -31,7 +36,8 @@
 			"ms-toolsai.vscode-jupyter-slideshow",
 			"visualstudioexptteam.intellicode-api-usage-examples",
 			"visualstudioexptteam.vscodeintellicode",
-			"yzhang.markdown-all-in-one"]
+			"yzhang.markdown-all-in-one",
+		]
 		}
 	},
 	// Use 'postCreateCommand' to run commands after the container is created.

@@ -8,7 +8,7 @@ def setup_logging() -> None:
     """Configure logging for the application."""
     logging_config = {
         "handlers": [
-            {"sink": sys.stdout, "level": "DEBUG", "colorize": True},
+            {"sink": sys.stdout, "level": "INFO", "colorize": True},
             {
                 "sink": f"{Path.cwd().parent / f'{__name__}.log'}",
                 "enqueue": True,

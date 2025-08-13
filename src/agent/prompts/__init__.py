@@ -256,7 +256,9 @@ CLARIFY_WITH_USER_INSTRUCTIONS = read_prompt(file_name="clarify_with_user_system
 
 SYSTEM_PROMPT_PROJECT_PLAN_STRUCTURE = read_prompt(file_name="system_prompt_project_plan_structure")
 
-TRANSFORM_MESSAGES_INTO_RESEARCH_TOPIC_PROMPT = read_prompt(file_name="transform_messages_into_research_topic_prompt")
+TRANSFORM_MESSAGES_INTO_RESEARCH_TOPIC_PROMPT = read_prompt(
+    file_name="transform_messages_into_research_topic_prompt",
+)
 
 SUMMARIZE_WEBPAGE_PROMPT = read_prompt(file_name="summarize_webpage")
 
@@ -269,6 +271,6 @@ DO NOT summarize the information. I want the raw information returned, just in a
 RESEARCH_SYSTEM_PROMPT = read_prompt(file_name="research_system_prompt")
 
 
-LEAD_RESEARCHER_PROMPT = read_prompt(file_name="lead_researcher_system_prompt")
+LEAD_RESEARCHER_PROMPT = read_prompt(file_name="lead_researcher_system_prompt_test")
 
 TOOL_MANAGER_PROMPT = read_prompt(file_name="tool_manager_system_prompt")

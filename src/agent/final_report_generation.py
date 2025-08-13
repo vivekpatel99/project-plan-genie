@@ -304,7 +304,7 @@ async def human_tool_review_node(
 builder = StateGraph(ReportGeneratorState, config_schema=Configuration)
 builder.add_node("final_report_generation", final_report_generation, cache_policy=CachePolicy())
 builder.add_node("human_tool_review_node", human_tool_review_node)
-builder.add_node("tool_manager", tool_manager, cache_policy=CachePolicy())
+builder.add_node("tool_manager", tool_manager)  # , cache_policy=CachePolicy())
 builder.add_node("mcp_tool_call", mcp_tool_call)
 
 builder.add_edge(START, "final_report_generation")

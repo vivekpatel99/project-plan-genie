@@ -1,6 +1,7 @@
 import sys
 from pathlib import Path
 
+from langgraph.func import CachePolicy
 from langgraph.graph import START, StateGraph
 from loguru import logger
 
@@ -51,7 +52,7 @@ logger.configure(**config)
 logger.info("Initializing Project Planning Genie...")
 supervisor_builder = StateGraph(SupervisorState, context_schema=Configuration)
 supervisor_builder.add_node("supervisor", supervisor)
-supervisor_builder.add_node("supervisor_tool", supervisor_tool)
+supervisor_builder.add_node("supervisor_tool", supervisor_tool, cache_policy=CachePolicy())
 supervisor_builder.add_edge(START, "supervisor")
 supervisor_subgraph = supervisor_builder.compile(name="Supervisor")
 

@@ -91,6 +91,16 @@ async def clarify_with_user(
                     ),
                 ],
             )
+            if response.need_clarification:
+                logger.info("User needs clarification.")
+                return Command(
+                    goto=END,
+                    update={
+                        StatesKeys.MSGS.value: [*messages, AIMessage(content=response.question)],
+                    },
+                )
+            logger.info("User does not need clarification.")
+            break
         except Exception as e:
             logger.error(e)
             synthesize_attempts += 1
@@ -99,14 +109,6 @@ async def clarify_with_user(
             if synthesize_attempts == config.clarification_attempts:
                 logger.error("Failed to synthesize response after " + str(synthesize_attempts) + " attempts.")
                 raise
-    if response.need_clarification:
-        logger.info("User needs clarification.")
-        return Command(
-            goto=END,
-            update={
-                StatesKeys.MSGS.value: [*messages, AIMessage(content=response.question)],
-            },
-        )
     logger.info("Clarification complete, proceeding to write research brief.")
     return Command(
         goto="write_research_brief",

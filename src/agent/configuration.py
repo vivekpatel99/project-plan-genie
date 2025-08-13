@@ -7,6 +7,15 @@ from typing import Any
 from langchain_core.runnables import RunnableConfig
 from pydantic import BaseModel, Field
 
+# ---------- Available models in .env files --------------------------------------------
+LOCAL_QWEN2_5_14B: str = "ollama:qwen2.5:14b"  # context windows 128K
+LOCAL_QWEN3_8B: str = "ollama:qwen3:8b"  # 32K
+LOCAL_QWEN3_14B: str = "ollama:qwen3:14b"  # 32K
+GEMINI_2_0_FLASH: str = "google_genai:gemini-2.0-flash"  # 1M
+GPT_4O_MINI: str = "openai:gpt-4o-mini"  # 128K
+SONAR: str = "perplexity:sonar"  # 128K
+SONAR_PRO: str = "perplexity:sonar-pro"  # 200K
+
 
 class SearchAPI(Enum):
     """Search APIs."""
@@ -20,21 +29,13 @@ class SearchAPI(Enum):
 class Defaults(Enum):
     """all Defaults settings."""
 
-    # CLARIFICATION_MODEL: str = "ollama:qwen2.5:14b"  # "perplexity:sonar-pro"  # "sonar-pro"  # "sonar-reasoning"
-    # RESEARCH_MODEL: str = "ollama:qwen2.5:14b"  # "openai:gpt-4o"
-    # COMPRESSION_MODEL: str = "ollama:qwen2.5:14b"  # "openai:gpt-4o-mini"
-    # SUMMARIZATION_MODEL: str = "ollama:qwen2.5:14b"  # openai:gpt-4o-mini"
-    # FINAL_REPORT_GENERATION_MODEL: str = "ollama:qwen2.5:14b2 # openai:gpt-4o"
-    # MCP_TOOL_MANAGER_MODEL: str = (
-    #     "ollama:qwen2.5:14b"  # "openai:gpt-4o-mini"  # "ollama:qwen3:14b"  # ollama:mixtral:8x7b"  # "ollama:qwen3:8b"
-    # )
     # Only For Testing
-    CLARIFICATION_MODEL: str = "gpt-4.1-mini-2025-04-14"
-    RESEARCH_MODEL: str = "gpt-4.1-mini-2025-04-14"
-    COMPRESSION_MODEL: str = "gpt-4.1-mini-2025-04-14"
-    SUMMARIZATION_MODEL: str = "gpt-4.1-mini-2025-04-14"
-    FINAL_REPORT_GENERATION_MODEL: str = "google_genai:gemini-2.0-flash"  # "ollama:qwen2.5:14b"  # "gpt-4.1-mini-2025-04-14"  # "ollama:qwen2.5:14b"  # "gpt-4.1-mini-2025-04-14"
-    MCP_TOOL_MANAGER_MODEL: str = "google_genai:gemini-2.0-flash"  # "ollama:qwen2.5:14b"  # gpt-4.1-mini-2025-04-14"
+    CLARIFICATION_MODEL: str = GEMINI_2_0_FLASH
+    COMPRESSION_MODEL: str = LOCAL_QWEN3_14B
+    RESEARCH_MODEL: str = GEMINI_2_0_FLASH
+    SUMMARIZATION_MODEL: str = GEMINI_2_0_FLASH
+    FINAL_REPORT_GENERATION_MODEL: str = LOCAL_QWEN3_14B
+    MCP_TOOL_MANAGER_MODEL: str = GEMINI_2_0_FLASH
 
     SEARCH_API: SearchAPI = SearchAPI.TAVILY
 
