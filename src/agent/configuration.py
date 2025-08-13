@@ -30,7 +30,7 @@ class Defaults(Enum):
     """all Defaults settings."""
 
     # Only For Testing
-    CLARIFICATION_MODEL: str = GEMINI_2_0_FLASH
+    CLARIFICATION_MODEL: str = LOCAL_QWEN3_14B
     COMPRESSION_MODEL: str = LOCAL_QWEN3_14B
     RESEARCH_MODEL: str = GEMINI_2_0_FLASH
     SUMMARIZATION_MODEL: str = GEMINI_2_0_FLASH
