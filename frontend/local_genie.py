@@ -16,7 +16,6 @@ from src.agent.project_planning_genie import agent_builder  # noqa: E402
 from src.agent.states import AgentState  # noqa: E402
 
 # set_llm_cache(SQLiteCache(database_path=".langchain.db"))
-THINK_REGEX = r"<think>(.*?)</think>"
 
 
 @logger.catch

@@ -118,7 +118,10 @@ async def clarify_with_user(
     )
 
 
-async def write_research_brief(state: AgentState, config: RunnableConfig) -> Command[Literal["supervisor_subgraph"]]:
+async def write_research_brief(
+    state: AgentState,
+    config: RunnableConfig,
+):  # -> Command[Literal["supervisor_subgraph"]]:
     """Create the research brief from previous conversations to prepare for research."""
     logger.info("Writing research brief...")
     config = Configuration.from_runnable_config(config)
@@ -145,7 +148,7 @@ async def write_research_brief(state: AgentState, config: RunnableConfig) -> Com
     logger.debug("Research brief created: {}", response.research_brief)
     logger.info("Proceeding to supervisor subgraph for further processing.")
     return Command(
-        goto="supervisor_subgraph",
+        goto=END,  # "supervisor_subgraph",
         update={
             StatesKeys.RESEARCH_BRIEF.value: response.research_brief,
             StatesKeys.SUPERVISOR_MSGS.value: [
@@ -171,7 +174,7 @@ clarify_builder.add_node("clarify_with_user", clarify_with_user)
 clarify_builder.add_node("write_research_brief", write_research_brief)
 
 clarify_builder.add_edge(START, "clarify_with_user")
-clarify_builder.add_edge("clarify_with_user", "write_research_brief")
-clarify_builder.add_edge("write_research_brief", END)
+# clarify_builder.add_edge("clarify_with_user", "write_research_brief")
+# clarify_builder.add_edge("write_research_brief", END)
 
 # clarify_subgraph = clarify_builder.compile(name="Clarify with User")

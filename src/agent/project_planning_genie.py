@@ -69,6 +69,7 @@ agent_builder.add_node("final_report_generation", final_report_graph)
 
 
 agent_builder.add_edge(START, "clarify_with_user")
+agent_builder.add_edge("write_research_brief", "supervisor_subgraph")
 agent_builder.add_edge(
     "supervisor_subgraph",
     "final_report_generation",

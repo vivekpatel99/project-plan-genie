@@ -69,16 +69,79 @@ async def stream_graph_responses(
         subgraph_name is the name of the subgraph that the message belongs to.
 
     """
-    async for message_chunk in graph.astream(input=user_input, config=config, stream_mode="messages"):
-        message, metadata = message_chunk
-        subgraph_name = metadata["langgraph_node"]
-        if isinstance(message, AIMessageChunk):
-            if message.tool_call_chunks:
-                tool_chunk = message.tool_call_chunks[0]
-                tool_call_str = await process_tool_call_chunk(tool_chunk)
-                yield tool_call_str, subgraph_name
-            else:
-                yield message.content, subgraph_name
+    async for mode, message_chunk in graph.astream(
+        input=user_input,
+        config=config,
+        stream_mode=["updates", "messages"],
+    ):
+        if mode == "updates":
+            graph_name = next(iter(message_chunk.keys()))
+            if graph_name == "clarify_with_user":
+                last_message = message_chunk[graph_name]["messages"][-1].content
+                # str_to_dict = json.loads(last_message)
+                # question: ClarifyWithUser = ClarifyWithUser.model_validate(str_to_dict)
+                # if question.need_clarification:
+                #     yield question.question
+                # else:
+                #     yield question.verification
+                yield last_message
+        if mode == "messages":
+            message, metadata = message_chunk
+            subgraph_name = metadata["langgraph_node"]
+            if isinstance(message, AIMessageChunk):
+                if message.tool_call_chunks:
+                    tool_chunk = message.tool_call_chunks[0]
+                    tool_call_str = await process_tool_call_chunk(tool_chunk)
+                    yield tool_call_str  # , subgraph_name
+                elif subgraph_name == "clarify_with_user":
+                    pass  # grab the question, so we can't stream the token
+                else:
+                    yield message.content  # , subgraph_name
+            # else:
+            #     yield message.content  # , subgraph_name
+
+
+# async def stream_graph_responses(
+#     *,
+#     user_input: dict[str, Any],
+#     graph: CompiledStateGraph,
+#     config: dict[str, Any],
+# ) -> AsyncGenerator[tuple[str, str]]:
+#     """
+#     Stream messages from a LangGraph agent, separating updates and messages.
+
+#     When the agent makes a tool call, yields a message like "< TOOL CALL: tool_name >".
+#     Otherwise, yields the message content.
+
+#     Args:
+#         user_input: The input to the agent.
+#         graph: The agent to stream messages from.
+#         config: The configuration to use when streaming messages.
+
+#     Yields:
+#         A tuple of (message, subgraph_name), where message is the message to display and
+#         subgraph_name is the name of the subgraph that the message belongs to.
+
+#     """
+#     async for message_chunk in graph.astream(input=user_input, config=config, stream_mode="messages"):
+#         message, metadata = message_chunk
+#         subgraph_name = metadata["langgraph_node"]
+#         if isinstance(message, AIMessageChunk):
+#             if message.tool_call_chunks:
+#                 tool_chunk = message.tool_call_chunks[0]
+#                 tool_call_str = await process_tool_call_chunk(tool_chunk)
+#                 yield tool_call_str  # , subgraph_name
+#             elif subgraph_name == "'clarify_with_user'":
+#                 pattern = r"\{.*\}"
+#                 match_str = re.search(pattern, message.content, re.DOTALL)
+#                 json_str = match_str.group()
+#                 str_to_dict = json.loads(json_str)
+#                 question: ClarifyWithUser = ClarifyWithUser.model_validate(str_to_dict)
+#                 yield question.question
+#             else:
+#                 yield message.content  # , subgraph_name
+#         else:
+#             yield message.content  # , subgraph_name
 
 
 async def handle_clarification(full_response: str) -> dict:
@@ -145,3 +208,42 @@ final_report_generation_input = {
     ],
     "final_report": "# Project Blueprint: LangGraph-powered AI Note-Taking Application MVP\n\n## 1. Executive Summary\n\nThis project aims to develop a LangGraph-powered AI note-taking application that enhances personal productivity by converting handwritten notes into structured digital formats. The primary goal is to create a Minimum Viable Product (MVP) that efficiently processes single images of handwritten notes and post-processes the extracted text for integration with Notion. The application will leverage computer vision for handwriting recognition, multi-agent systems for task orchestration, and robust AI engineering practices to ensure a reliable and scalable solution.\n\n## 2. Technology Stack Recommendation\n\n| Category           | Technology / Framework    | Justification                                                                                                                                           | Trade-offs / Limitations                                   |\n| ------------------ | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------- |\n| **Frontend**       | LangGraph UI              | Offers a prebuilt user interface for seamless user interactions and is built on Python, reducing the need for front-end development expertise.       | Limited customization possibilities compared to custom solutions. |\n| **Backend**        | FastAPI                   | Lightweight framework for building APIs in Python, ideal for creating asynchronous endpoints to handle OCR and Notion integration.                  | May require more setup for advanced features.              |\n| **Database**       | N/A                       | Currently not needed for MVP; potential for future inclusion to manage user data or session states.                                                  | N/A                                                       |\n| **Deployment**     | Docker                    | Enables easy deployment and scaling of application components as containers, ensuring consistency across development and production environments.      | Increased complexity for local development setup.         |\n| **Authentication** | API Key (Notion API)     | Simple authentication mechanism for early MVP; allows quick integration with Notion’s API without implementing complex OAuth flows initially.        | Limited user management features, reliance on single API key. |\n\n## 3. Project Structure & Architectural Patterns\n\n### Recommended Folder Structure\n\n```\n/langgraph_ai_note_taking/\n│\n├── /api-server/\n│   ├── __init__.py\n│   ├── main.py\n│   ├── /controllers/\n│   ├── /repositories/\n│   ├── /services/\n│   │   ├── /factories/\n│   │   ├── /image_processing/\n│   │   ├── /notion/\n│   ├── /models/\n│   └── dependencies.py\n│\n├── /ui/\n│   ├── __init__.py\n│   └── main.py\n│\n├── /tests/\n│   ├── test_api.py\n│   ├── test_services.py\n│   └── ...\n│\n└── README.md\n```\n\n### Key Design Patterns\n\n| Pattern Name              | Where to Apply                             | Rationale                                       | Trade-offs / Notes                                     |\n| ------------------------- | ------------------------------------------ | ----------------------------------------------- | ------------------------------------------------------ |\n| **Model-View-Controller** | /api-server/controllers                    | Separates concerns, easier scaling & testing   | May require additional boilerplate code                |\n| **Repository Pattern**    | /api-server/repositories                   | Decouples business logic from data sources      | Could introduce complexity if overused in simple scenarios |\n| **Strategy Pattern**      | /api-server/services/image_processing/    | Allows for easily swappable image processing techniques | Can add abstraction that might not be necessary for all cases |\n| **Factory Pattern**       | /api-server/services/factories            | Centralized object creation, supports Dependency Injection | Limited to object creation; does not encapsulate behavior |\n| **Dependency Injection**  | Service constructors in FastAPI           | Loose coupling, facilitating easier unit testing| May make understanding the flow of data difficult initially |\n| **Context Manager**       | /api-server/db/session_manager.py         | Ensures safe resource cleanup when processing images | Requires correct implementation for effective cleanup  |\n\n## 4. Phased Development Plan (MVP to Full Launch)\n\n### **Phase 1: Minimum Viable Product (MVP)**\n\n- [ ] **Feature: Implement single-image processing for handwritten notes**\n- [ ] **Feature: Integrate Tesseract for handwriting recognition**\n- [ ] **Feature: Develop image preprocessing modules (binarization, resolution enhancement)**\n- [ ] **Feature: Structure extracted text into Markdown format**\n- [ ] **Feature: Enable integration with Notion using API keys**\n- [ ] **Chore: Set up development environment with Docker**\n\n### **Phase 2: Core Features (V1.0)**\n\n- [ ] **Feature: Add multi-agent orchestration for task handling**\n    - [ ] **Agent 1: Image-to-text extraction**\n    - [ ] **Agent 2: Text formatting and Notion upload**\n- [ ] **Feature: Implement batch processing considerations for images**\n- [ ] **Chore: Document API endpoints and usage for future developers**\n\n### **Phase 3: Advanced Features (V1.1+)**\n\n- [ ] **Feature: Explore user management options for better authentication and access control**\n- [ ] **Feature: Develop extensions for multilingual support (if market dictates)**\n\n\n## 5. Key Best Practices\n\n- **Version Control:** Implement trunk-based flow in the Git repository, enforce PR checks via CI/CD, and adhere to semantic commit messages.\n- **Testing:** Use pytest for unit tests, implement integration testing with Docker Compose, and leverage Playwright for end-to-end testing.\n- **Code Quality:** Enforce linting with ruff, code formatting with black, and type-checking with mypy during CI/CD pipeline execution.\n- **Security:** Conduct OWASP top-10 audits before deployment, perform dependency scanning using tools like Dependabot, and securely manage environment secrets.\n- **Documentation:** Maintain ADRs in the `/docs/adr` directory, generate comprehensive API documentation via OpenAPI, and include README badges for status checks.\n\n\n## 6. Sources\n\n1. How To Convert Handwritten Notes To Text Using AI? - LinkedIn: https://www.linkedin.com/pulse/how-convert-handwritten-notes-text-using-ai-the-next-tech-hcsoc  \n2. MyScript - Handwriting technology & digital ink solutions: https://www.myscript.com/  \n3. How to Convert Handwritten Notes and Documents to Digital Text: https://www.kukarella.com/resources/ai-transcription/how-to-convert-handwritten-notes-and-documents-to-digital-text  \n4. 12 Notable Note-Taking Apps That Convert Handwriting to Text: https://antispace.ghost.io/note-taking-app-that-converts-handwriting-to-text/  \n5. Enhancement of handwritten text recognition using AI-based hybrid approaches: https://www.sciencedirect.com/science/article/pii/S2215016124001080  \n6. Tesseract Open Source OCR Engine - GitHub: https://github.com/tesseract-ocr/tesseract  \n7. Notion API Overview: https://developers.notion.com/docs/getting-started  \n8. Building an MCP server as an API developer | Medium: https://heeki.medium.com/building-an-mcp-server-as-an-api-developer-cfc162d06a83  \n9. AI Meeting Notes in Notion | Capture, Transcribe, and Turn Ideas: https://www.notion.com/product/ai-meeting-notes  \n\n## 7. Final Review\n\n- The report follows the required structure.\n- No preamble before the title of the report is included.\n- All engineering guidelines have been followed.",  # noqa: RUF001
 }
+
+
+# graph_input = AgentState(
+#     messages=[
+#         HumanMessage(
+#             content="""Develop an agent-powered AI note-taking app using LangGraph, designed for personal productivity and as a demonstration of your skills in computer vision, multi-agent systems, and end-to-end AI engineering. The app will facilitate capturing handwritten notes, automatically formatting them (including complex content like equations and diagrams), classifying content into the correct Notion section, and uploading the processed notes with rich formatting. The goal is to implement a Minimum Viable Product (MVP) capable of image-to-text conversion and formatting within two weeks.
+
+# **Core Features**
+# **Image Capture:**
+# Capture pictures of handwritten notes in English via a user interface (LangGraph's prebuilt UI, accessible from PC). It should capture image one by one.
+# **English Handwriting Recognition:**
+# Automatically extract typed text (including digits, equations, and diagrams) from handwritten pictures using cutting-edge OCR. you should search for best open source(free) ocr engine for python. Equation must be also in Latex format. You must find best open source OCR engine for this task
+# **Formatting & Structuring:**
+# Clean and format extracted notes (markdown, LaTeX for equations, code blocks, etc.).
+# Detect and separate sections; classify content to either add as a new Notion sub-page/page or merge with an existing page.
+# The diagram can be either a flowchart or a block diagram. it must supports tables. Diagram must be editable for user interaction/update.
+# **Integration with Notion:**
+# Upload formatted notes programmatically into Notion, preserving structure and style. it must use Notion integration API key (my personal API keys) for authentication and access to Notion's database. I will mcp server for communicating with Notion.
+
+# **Agentic Orchestration:**
+# Use a multi-agent system in LangGraph for more information -'https://docs.oap.langchain.com/quickstart':
+# Agent 1: Image-to-text extraction (OCR, diagram/equation recognition)
+# Agent 2: Text cleanup, markdown formatting, and Notion posting
+# **PC Interaction:**
+# Leverage LangGraph's prebuilt UI for smooth agent interaction from a PC browser, more information about open agent platform for ui 'https://docs.oap.langchain.com/quickstart'.
+# **Python First:**
+# Entire codebase written in Python, using established libraries for AI, vision, and web connectivity.
+
+# - you must select clean architecture and SOLID principles and decide where to use which principles for this project
+# - you must select best testing strategy for this project
+# - you must decide better architecture style, such as a microservice-style modular backend, a monolith and so on
+# - use model can be easily swappable to keep up with the latest developments in AI technology
+# - it is personal project for personal portfolio development so good readme with proper diagram (visualization) is required. so anybody can easily understand your project idea and workflow.
+#  """,
+#         ),
+#     ],
+# )
+
+# try:
