@@ -49,8 +49,6 @@ dependencies = [
 [project.optional-dependencies]
 dev = ["mypy", "ruff"]
 
-[tool.setuptools]
-packages = ["langgraph.templates.agent", "agent"]
 
 [tool.setuptools.package-dir]
 # This maps package names to the directories where their source code is located.

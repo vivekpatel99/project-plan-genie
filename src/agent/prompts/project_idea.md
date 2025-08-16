@@ -26,3 +26,12 @@ Entire codebase written in Python, using established libraries for AI, vision, a
 - you must decide better architecture style, such as a microservice-style modular backend, a monolith and so on
 - use model can be easily swappable to keep up with the latest developments in AI technology
 - it is personal project for personal portfolio development so good readme with proper diagram (visualization) is required. so anybody can easily understand your project idea and workflow.
+
+I want to develop an agent-powered Job application app using LangGraph. i will have all the information about my CV and i will provide job advertisement link. it should use information from CV and job advertisement to generate well-formatted (from given example) cover letter.
+the cover letter must contain following points:
+
+- name of the file with given conversion
+- correct job title
+- correct company name
+  we must verify this thing 2 times. because i will just attach the cover letter.
+  help me to plan this project properly, so that i can quickly work on building this project.

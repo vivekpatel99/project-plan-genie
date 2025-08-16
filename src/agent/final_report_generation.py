@@ -269,7 +269,10 @@ async def human_tool_review_node(
     tool_calls = list(last_message.tool_calls)
     # Stop graph execution and wait for human input
     human_review: dict = interrupt(
-        {"message": "Your input is required for the following tool:", "tool_calls": tool_calls},
+        {
+            "message": r"Your input is required for the following tool and your response must be in json format such as {'action': 'accept'} or {'feedback':'wrong toll call'}",
+            "tool_calls": tool_calls,
+        },
     )
     review_action = human_review.get("action")
 
