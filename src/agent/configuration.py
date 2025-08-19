@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 LOCAL_QWEN2_5_14B: str = "ollama:qwen2.5:14b"  # context windows 128K
 LOCAL_QWEN3_8B: str = "ollama:qwen3:8b"  # 32K
 LOCAL_QWEN3_14B: str = "ollama:qwen3:14b"  # 32K
+LOCAL_GPT_OSS: str = "ollama:gpt-oss:20b"  # 128K
 GEMINI_2_0_FLASH: str = "google_genai:gemini-2.0-flash"  # 1M
 GPT_4O_MINI: str = "openai:gpt-4o-mini"  # 128K
 SONAR: str = "perplexity:sonar"  # 128K
@@ -30,12 +31,12 @@ class Defaults(Enum):
     """all Defaults settings."""
 
     # Only For Testing
-    CLARIFICATION_MODEL: str = LOCAL_QWEN2_5_14B
-    COMPRESSION_MODEL: str = LOCAL_QWEN2_5_14B
-    RESEARCH_MODEL: str = GEMINI_2_0_FLASH
-    SUMMARIZATION_MODEL: str = GEMINI_2_0_FLASH
-    FINAL_REPORT_GENERATION_MODEL: str = SONAR
-    MCP_TOOL_MANAGER_MODEL: str = GEMINI_2_0_FLASH
+    CLARIFICATION_MODEL: str = LOCAL_QWEN3_8B
+    COMPRESSION_MODEL: str = LOCAL_QWEN3_8B
+    RESEARCH_MODEL: str = LOCAL_QWEN3_8B
+    SUMMARIZATION_MODEL: str = LOCAL_QWEN3_8B
+    FINAL_REPORT_GENERATION_MODEL: str = LOCAL_QWEN3_8B
+    MCP_TOOL_MANAGER_MODEL: str = LOCAL_GPT_OSS
 
     SEARCH_API: SearchAPI = SearchAPI.TAVILY
 

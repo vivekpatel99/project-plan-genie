@@ -12,14 +12,14 @@ from langgraph.types import Command
 from loguru import logger
 
 rootutils.setup_root(__file__, indicator=".git", pythonpath=True)
-from src.agent.states import ClarifyWithUser  # noqa: E402
+from src.agent.states import ClarifyWithUser, StatesKeys  # noqa: E402
 
 
 def setup_logging() -> None:
     """Configure logging for the application."""
     logging_config = {
         "handlers": [
-            {"sink": sys.stdout, "level": "INFO", "colorize": True},
+            {"sink": sys.stdout, "level": "DEBUG", "colorize": True},
             {
                 "sink": f"{Path.cwd().parent / f'{__name__}.log'}",
                 "enqueue": True,
@@ -78,12 +78,6 @@ async def stream_graph_responses(
             graph_name = next(iter(message_chunk.keys()))
             if graph_name == "clarify_with_user":
                 last_message = message_chunk[graph_name]["messages"][-1].content
-                # str_to_dict = json.loads(last_message)
-                # question: ClarifyWithUser = ClarifyWithUser.model_validate(str_to_dict)
-                # if question.need_clarification:
-                #     yield question.question
-                # else:
-                #     yield question.verification
                 yield last_message
         if mode == "messages":
             message, metadata = message_chunk
@@ -95,53 +89,104 @@ async def stream_graph_responses(
                     yield tool_call_str  # , subgraph_name
                 elif subgraph_name == "clarify_with_user":
                     pass  # grab the question, so we can't stream the token
-                else:
-                    yield message.content  # , subgraph_name
-            # else:
-            #     yield message.content  # , subgraph_name
+            else:
+                yield message.content  # , subgraph_name
 
 
-# async def stream_graph_responses(
-#     *,
-#     user_input: dict[str, Any],
-#     graph: CompiledStateGraph,
-#     config: dict[str, Any],
-# ) -> AsyncGenerator[tuple[str, str]]:
-#     """
-#     Stream messages from a LangGraph agent, separating updates and messages.
+@logger.catch
+async def stream_graph_responses_test(  # noqa: C901, PLR0912, PLR0915
+    *,
+    user_input: dict[str, Any],
+    graph: CompiledStateGraph,
+    config: dict[str, Any],
+) -> AsyncGenerator[tuple[str, str]]:
+    """
+    Stream messages from a LangGraph agent, separating updates and messages.
 
-#     When the agent makes a tool call, yields a message like "< TOOL CALL: tool_name >".
-#     Otherwise, yields the message content.
+    When the agent makes a tool call, yields a message like "< TOOL CALL: tool_name >".
+    Otherwise, yields the message content.
 
-#     Args:
-#         user_input: The input to the agent.
-#         graph: The agent to stream messages from.
-#         config: The configuration to use when streaming messages.
+    Args:
+        user_input: The input to the agent.
+        graph: The agent to stream messages from.
+        config: The configuration to use when streaming messages.
 
-#     Yields:
-#         A tuple of (message, subgraph_name), where message is the message to display and
-#         subgraph_name is the name of the subgraph that the message belongs to.
+    Yields:
+        A tuple of (message, subgraph_name), where message is the message to display and
+        subgraph_name is the name of the subgraph that the message belongs to.
 
-#     """
-#     async for message_chunk in graph.astream(input=user_input, config=config, stream_mode="messages"):
-#         message, metadata = message_chunk
-#         subgraph_name = metadata["langgraph_node"]
-#         if isinstance(message, AIMessageChunk):
-#             if message.tool_call_chunks:
-#                 tool_chunk = message.tool_call_chunks[0]
-#                 tool_call_str = await process_tool_call_chunk(tool_chunk)
-#                 yield tool_call_str  # , subgraph_name
-#             elif subgraph_name == "'clarify_with_user'":
-#                 pattern = r"\{.*\}"
-#                 match_str = re.search(pattern, message.content, re.DOTALL)
-#                 json_str = match_str.group()
-#                 str_to_dict = json.loads(json_str)
-#                 question: ClarifyWithUser = ClarifyWithUser.model_validate(str_to_dict)
-#                 yield question.question
-#             else:
-#                 yield message.content  # , subgraph_name
-#         else:
-#             yield message.content  # , subgraph_name
+    """
+    async for chunk in graph.astream(
+        input=user_input,
+        config=config,
+        stream_mode="updates",
+    ):
+        node_name = next(iter(chunk.keys()))
+
+        if node_name == "__interrupt__":
+            total_interrupts = []
+            for _interrupts in chunk[node_name]:
+                msg = _interrupts.value.get("message")
+                interrupt_data = _interrupts.value
+                if "tool_calls" in interrupt_data:
+                    print("Found 'tool_calls' key.")
+                    tool_calls = interrupt_data["tool_calls"]
+                    # Now you can safely process the list of tool calls
+                    # for example, iterate through them
+                    for tool_call in tool_calls:
+                        tool_name = tool_call.get("name")
+                        tool_args = tool_call.get("args")
+                        formatted_string = "\n".join(f"{key.capitalize()}: {value}" for key, value in tool_args.items())
+                        tool_call_str = (
+                            f"\n{msg}\n\n< TOOL CALL: tool_name: {tool_name} >\ntool_arg: {formatted_string}"
+                        )
+                        total_interrupts.append(tool_call_str)
+                elif "tool_call" in interrupt_data:
+                    tool_call = _interrupts.value.get("tool_call")
+                    tool_name = tool_call.get("name")
+                    tool_args = tool_call.get("args")
+                    formatted_string = "\n".join(f"{key.capitalize()}: {value}" for key, value in tool_args.items())
+                    tool_call_str = f"\n{msg}\n\n< TOOL CALL: tool_name: {tool_name} >\ntool_arg: {formatted_string}"
+                    total_interrupts.append(tool_call_str)
+            yield "\n\n".join(total_interrupts)
+
+        elif node_name == "clarify_with_user":
+            msg = chunk[node_name]
+            msg = msg["messages"][-1].content
+            yield f"\n\n **{node_name}**: \n{msg}"
+
+        elif node_name == "write_research_brief":
+            msg = chunk[node_name]
+            msg = msg["research_brief"]
+            yield f"\n\n **{node_name}**: \n{msg}"
+
+        elif node_name == "supervisor_subgraph":
+            msg = chunk[node_name]
+            last_msg = msg[StatesKeys.SUPERVISOR_MSGS.value][-1]
+            additional_kwargs = last_msg.additional_kwargs
+            function_call = additional_kwargs.get("function_call")
+            formatted_string = ""
+            if function_call is not None:
+                formatted_string = "\n".join(f"{key.capitalize()}: {value}" for key, value in function_call.items())
+
+            yield f"\n\n **{node_name}**: \n{formatted_string}"
+
+        elif node_name == "final_report_generation":
+            msg = chunk[node_name]
+            msg = msg[StatesKeys.FINAL_REPORT.value]
+            yield f"\n\n **{node_name}**: \n{msg}"
+
+        elif node_name == "tool_manager":
+            msg = chunk[node_name]
+            msg = msg[StatesKeys.TOOL_MANAGER_MESSAGES.value][-1].content
+            yield f"\n\n **{node_name}**: \n{msg}"
+
+        elif node_name == "mcp_tool_call":
+            msg = chunk[node_name]
+            msg = msg[StatesKeys.TOOL_MANAGER_MESSAGES.value]
+            yield f"\n\n **{node_name}**: \n{msg}"
+        else:
+            yield "**FROM ELSE CONDITION** \n\n" + str(chunk)
 
 
 async def handle_clarification(full_response: str) -> dict:
@@ -210,40 +255,33 @@ final_report_generation_input = {
 }
 
 
-# graph_input = AgentState(
-#     messages=[
-#         HumanMessage(
-#             content="""Develop an agent-powered AI note-taking app using LangGraph, designed for personal productivity and as a demonstration of your skills in computer vision, multi-agent systems, and end-to-end AI engineering. The app will facilitate capturing handwritten notes, automatically formatting them (including complex content like equations and diagrams), classifying content into the correct Notion section, and uploading the processed notes with rich formatting. The goal is to implement a Minimum Viable Product (MVP) capable of image-to-text conversion and formatting within two weeks.
+graph_input = """
+Develop an agent-powered AI note-taking app using LangGraph, designed for personal productivity and as a demonstration of your skills in computer vision, multi-agent systems, and end-to-end AI engineering. The app will facilitate capturing handwritten notes, automatically formatting them (including complex content like equations and diagrams), classifying content into the correct Notion section, and uploading the processed notes with rich formatting. The goal is to implement a Minimum Viable Product (MVP) capable of image-to-text conversion and formatting within two weeks.
 
-# **Core Features**
-# **Image Capture:**
-# Capture pictures of handwritten notes in English via a user interface (LangGraph's prebuilt UI, accessible from PC). It should capture image one by one.
-# **English Handwriting Recognition:**
-# Automatically extract typed text (including digits, equations, and diagrams) from handwritten pictures using cutting-edge OCR. you should search for best open source(free) ocr engine for python. Equation must be also in Latex format. You must find best open source OCR engine for this task
-# **Formatting & Structuring:**
-# Clean and format extracted notes (markdown, LaTeX for equations, code blocks, etc.).
-# Detect and separate sections; classify content to either add as a new Notion sub-page/page or merge with an existing page.
-# The diagram can be either a flowchart or a block diagram. it must supports tables. Diagram must be editable for user interaction/update.
-# **Integration with Notion:**
-# Upload formatted notes programmatically into Notion, preserving structure and style. it must use Notion integration API key (my personal API keys) for authentication and access to Notion's database. I will mcp server for communicating with Notion.
+**Core Features**
+**Image Capture:**
+Capture pictures of handwritten notes in English via a user interface (LangGraph's prebuilt UI, accessible from PC). It should capture image one by one.
+**English Handwriting Recognition:**
+Automatically extract typed text (including digits, equations, and diagrams) from handwritten pictures using cutting-edge OCR. you should search for best open source(free) ocr engine for python. Equation must be also in Latex format. You must find best open source OCR engine for this task
+**Formatting & Structuring:**
+Clean and format extracted notes (markdown, LaTeX for equations, code blocks, etc.).
+Detect and separate sections; classify content to either add as a new Notion sub-page/page or merge with an existing page.
+The diagram can be either a flowchart or a block diagram. it must supports tables. Diagram must be editable for user interaction/update.
+**Integration with Notion:**
+Upload formatted notes programmatically into Notion, preserving structure and style. it must use Notion integration API key (my personal API keys) for authentication and access to Notion's database. I will mcp server for communicating with Notion.
 
-# **Agentic Orchestration:**
-# Use a multi-agent system in LangGraph for more information -'https://docs.oap.langchain.com/quickstart':
-# Agent 1: Image-to-text extraction (OCR, diagram/equation recognition)
-# Agent 2: Text cleanup, markdown formatting, and Notion posting
-# **PC Interaction:**
-# Leverage LangGraph's prebuilt UI for smooth agent interaction from a PC browser, more information about open agent platform for ui 'https://docs.oap.langchain.com/quickstart'.
-# **Python First:**
-# Entire codebase written in Python, using established libraries for AI, vision, and web connectivity.
+**Agentic Orchestration:**
+Use a multi-agent system in LangGraph for more information -'https://docs.oap.langchain.com/quickstart':
+Agent 1: Image-to-text extraction (OCR, diagram/equation recognition)
+Agent 2: Text cleanup, markdown formatting, and Notion posting
+**PC Interaction:**
+Leverage LangGraph's prebuilt UI for smooth agent interaction from a PC browser, more information about open agent platform for ui 'https://docs.oap.langchain.com/quickstart'.
+**Python First:**
+Entire codebase written in Python, using established libraries for AI, vision, and web connectivity.
 
-# - you must select clean architecture and SOLID principles and decide where to use which principles for this project
-# - you must select best testing strategy for this project
-# - you must decide better architecture style, such as a microservice-style modular backend, a monolith and so on
-# - use model can be easily swappable to keep up with the latest developments in AI technology
-# - it is personal project for personal portfolio development so good readme with proper diagram (visualization) is required. so anybody can easily understand your project idea and workflow.
-#  """,
-#         ),
-#     ],
-# )
-
-# try:
+- you must select clean architecture and SOLID principles and decide where to use which principles for this project
+- you must select best testing strategy for this project
+- you must decide better architecture style, such as a microservice-style modular backend, a monolith and so on
+- use model can be easily swappable to keep up with the latest developments in AI technology
+- it is personal project for personal portfolio development so good readme with proper diagram (visualization) is required. so anybody can easily understand your project idea and workflow.
+ """
