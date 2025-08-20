@@ -83,7 +83,7 @@ async def final_report_generation(
         try:
             response = await report_generator_model.ainvoke([HumanMessage(content=final_report_prompt)])
 
-            logger.info("Final report generated: {}", response)
+            logger.debug("Final report generated: {}", response)
             return Command(
                 goto="tool_manager",
                 update={
@@ -107,32 +107,6 @@ async def final_report_generation(
             StatesKeys.FINAL_REPORT.value: error,
         },
     )
-
-
-# @logger.catch
-# async def get_mcp_tools_node(
-#     state: ReportGeneratorState,
-#     config: RunnableConfig,  #
-# ) -> Command[Literal["tool_manager"]]:
-#     """
-#     Get all the available tools on the MCP servers.
-
-#     Args:
-#         state (Report generation state): Unused
-#         config (Runnable configuration): Unused
-
-#     Returns:
-#         list[ToolMessage]: List of all available tools
-
-#     Note: The parameters 'state' and 'config' are not used in this implementation but kept to satisfy langgraph requirements
-
-#     """
-#     logger.info("Getting MCP tools...")
-#     client = MultiServerMCPClient(connections=mcp_config["mcpServers"])
-#     tools = await client.get_tools()
-#     tools_by_name = {tool.name: tool for tool in tools if hasattr(tool, "name")}
-
-#     return Command(goto="tool_manager", update={"mcp_tools": tools, "mcp_tools_by_name": tools_by_name})
 
 
 @logger.catch

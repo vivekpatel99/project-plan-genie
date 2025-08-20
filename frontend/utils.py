@@ -12,7 +12,8 @@ from langgraph.types import Command
 from loguru import logger
 
 rootutils.setup_root(__file__, indicator=".git", pythonpath=True)
-from src.agent.states import ClarifyWithUser, StatesKeys  # noqa: E402
+from frontend.message_router import StreamManager  # noqa: E402
+from src.agent.states import ClarifyWithUser  # noqa: E402
 
 
 def setup_logging() -> None:
@@ -94,11 +95,12 @@ async def stream_graph_responses(
 
 
 @logger.catch
-async def stream_graph_responses_test(  # noqa: C901, PLR0912, PLR0915
+async def stream_graph_responses_test(
     *,
     user_input: dict[str, Any],
     graph: CompiledStateGraph,
     config: dict[str, Any],
+    stream_mode: str = "updates",
 ) -> AsyncGenerator[tuple[str, str]]:
     """
     Stream messages from a LangGraph agent, separating updates and messages.
@@ -110,83 +112,122 @@ async def stream_graph_responses_test(  # noqa: C901, PLR0912, PLR0915
         user_input: The input to the agent.
         graph: The agent to stream messages from.
         config: The configuration to use when streaming messages.
+        stream_mode: The stream mode to use when streaming messages either `updates` or `messages`.
 
     Yields:
         A tuple of (message, subgraph_name), where message is the message to display and
         subgraph_name is the name of the subgraph that the message belongs to.
 
     """
+    stream_manager = StreamManager()
     async for chunk in graph.astream(
         input=user_input,
         config=config,
-        stream_mode="updates",
+        stream_mode=stream_mode,
     ):
         node_name = next(iter(chunk.keys()))
+        if node_name == "final_report_graph":
+            print()
+        print(node_name)
+        router = stream_manager.get_router(stream_mode)
+        async for output in router.route(chunk, node_name):
+            yield output
 
-        if node_name == "__interrupt__":
-            total_interrupts = []
-            for _interrupts in chunk[node_name]:
-                msg = _interrupts.value.get("message")
-                interrupt_data = _interrupts.value
-                if "tool_calls" in interrupt_data:
-                    print("Found 'tool_calls' key.")
-                    tool_calls = interrupt_data["tool_calls"]
-                    # Now you can safely process the list of tool calls
-                    # for example, iterate through them
-                    for tool_call in tool_calls:
-                        tool_name = tool_call.get("name")
-                        tool_args = tool_call.get("args")
-                        formatted_string = "\n".join(f"{key.capitalize()}: {value}" for key, value in tool_args.items())
-                        tool_call_str = (
-                            f"\n{msg}\n\n< TOOL CALL: tool_name: {tool_name} >\ntool_arg: {formatted_string}"
-                        )
-                        total_interrupts.append(tool_call_str)
-                elif "tool_call" in interrupt_data:
-                    tool_call = _interrupts.value.get("tool_call")
-                    tool_name = tool_call.get("name")
-                    tool_args = tool_call.get("args")
-                    formatted_string = "\n".join(f"{key.capitalize()}: {value}" for key, value in tool_args.items())
-                    tool_call_str = f"\n{msg}\n\n< TOOL CALL: tool_name: {tool_name} >\ntool_arg: {formatted_string}"
-                    total_interrupts.append(tool_call_str)
-            yield "\n\n".join(total_interrupts)
 
-        elif node_name == "clarify_with_user":
-            msg = chunk[node_name]
-            msg = msg["messages"][-1].content
-            yield f"\n\n **{node_name}**: \n{msg}"
+# @logger.catch
+# async def stream_graph_responses_test(
+#     *,
+#     user_input: dict[str, Any],
+#     graph: CompiledStateGraph,
+#     config: dict[str, Any],
+# ) -> AsyncGenerator[tuple[str, str]]:
+#     """
+#     Stream messages from a LangGraph agent, separating updates and messages.
 
-        elif node_name == "write_research_brief":
-            msg = chunk[node_name]
-            msg = msg["research_brief"]
-            yield f"\n\n **{node_name}**: \n{msg}"
+#     When the agent makes a tool call, yields a message like "< TOOL CALL: tool_name >".
+#     Otherwise, yields the message content.
 
-        elif node_name == "supervisor_subgraph":
-            msg = chunk[node_name]
-            last_msg = msg[StatesKeys.SUPERVISOR_MSGS.value][-1]
-            additional_kwargs = last_msg.additional_kwargs
-            function_call = additional_kwargs.get("function_call")
-            formatted_string = ""
-            if function_call is not None:
-                formatted_string = "\n".join(f"{key.capitalize()}: {value}" for key, value in function_call.items())
+#     Args:
+#         user_input: The input to the agent.
+#         graph: The agent to stream messages from.
+#         config: The configuration to use when streaming messages.
 
-            yield f"\n\n **{node_name}**: \n{formatted_string}"
+#     Yields:
+#         A tuple of (message, subgraph_name), where message is the message to display and
+#         subgraph_name is the name of the subgraph that the message belongs to.
 
-        elif node_name == "final_report_generation":
-            msg = chunk[node_name]
-            msg = msg[StatesKeys.FINAL_REPORT.value]
-            yield f"\n\n **{node_name}**: \n{msg}"
+#     """
+#     async for chunk in graph.astream(
+#         input=user_input,
+#         config=config,
+#         stream_mode="updates",
+#     ):
+#         node_name = next(iter(chunk.keys()))
 
-        elif node_name == "tool_manager":
-            msg = chunk[node_name]
-            msg = msg[StatesKeys.TOOL_MANAGER_MESSAGES.value][-1].content
-            yield f"\n\n **{node_name}**: \n{msg}"
+#         if node_name == "__interrupt__":
+#             total_interrupts = []
+#             for _interrupts in chunk[node_name]:
+#                 msg = _interrupts.value.get("message")
+#                 interrupt_data = _interrupts.value
+#                 if "tool_calls" in interrupt_data:
+#                     print("Found 'tool_calls' key.")
+#                     tool_calls = interrupt_data["tool_calls"]
+#                     # Now you can safely process the list of tool calls
+#                     # for example, iterate through them
+#                     for tool_call in tool_calls:
+#                         tool_name = tool_call.get("name")
+#                         tool_args = tool_call.get("args")
+#                         formatted_string = "\n".join(f"{key.capitalize()}: {value}" for key, value in tool_args.items())
+#                         tool_call_str = (
+#                             f"\n{msg}\n\n< TOOL CALL: tool_name: {tool_name} >\ntool_arg: {formatted_string}"
+#                         )
+#                         total_interrupts.append(tool_call_str)
+#                 elif "tool_call" in interrupt_data:
+#                     tool_call = _interrupts.value.get("tool_call")
+#                     tool_name = tool_call.get("name")
+#                     tool_args = tool_call.get("args")
+#                     formatted_string = "\n".join(f"{key.capitalize()}: {value}" for key, value in tool_args.items())
+#                     tool_call_str = f"\n{msg}\n\n< TOOL CALL: tool_name: {tool_name} >\ntool_arg: {formatted_string}"
+#                     total_interrupts.append(tool_call_str)
+#             yield "\n\n".join(total_interrupts)
 
-        elif node_name == "mcp_tool_call":
-            msg = chunk[node_name]
-            msg = msg[StatesKeys.TOOL_MANAGER_MESSAGES.value]
-            yield f"\n\n **{node_name}**: \n{msg}"
-        else:
-            yield "**FROM ELSE CONDITION** \n\n" + str(chunk)
+#         elif node_name == "clarify_with_user":
+#             msg = chunk[node_name]
+#             msg = msg["messages"][-1].content
+#             yield f"\n\n **{node_name}**: \n{msg}"
+
+#         elif node_name == "write_research_brief":
+#             msg = chunk[node_name]
+#             msg = msg["research_brief"]
+#             yield f"\n\n **{node_name}**: \n{msg}"
+
+#         elif node_name == "supervisor_subgraph":
+#             msg = chunk[node_name]
+#             last_msg = msg[StatesKeys.SUPERVISOR_MSGS.value][-1]
+#             additional_kwargs = last_msg.additional_kwargs
+#             function_call = additional_kwargs.get("function_call")
+#             formatted_string = ""
+#             if function_call is not None:
+#                 formatted_string = "\n".join(f"{key.capitalize()}: {value}" for key, value in function_call.items())
+
+#             yield f"\n\n **{node_name}**: \n{formatted_string}"
+
+#         elif node_name == "final_report_generation":
+#             msg = chunk[node_name]
+#             msg = msg[StatesKeys.FINAL_REPORT.value]
+#             yield f"\n\n **{node_name}**: \n{msg}"
+
+#         elif node_name == "tool_manager":
+#             msg = chunk[node_name]
+#             msg = msg[StatesKeys.TOOL_MANAGER_MESSAGES.value][-1].content
+#             yield f"\n\n **{node_name}**: \n{msg}"
+
+#         elif node_name == "mcp_tool_call":
+#             msg = chunk[node_name]
+#             msg = msg[StatesKeys.TOOL_MANAGER_MESSAGES.value]
+#             yield f"\n\n **{node_name}**: \n{msg}"
+#         else:
+#             yield "**FROM ELSE CONDITION** \n\n" + str(chunk)
 
 
 async def handle_clarification(full_response: str) -> dict:
