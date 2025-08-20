@@ -70,7 +70,7 @@ class StreamRouter:
 
         async def handle(self, chunk: dict[str, Any], node_name: str) -> AsyncIterator[str]:
             logger.warning(f"No specific handler for node '{node_name}'. Using default handler.")
-            yield f"**FROM DEFAULT HANDLER ({node_name})** \n\n" + str(chunk)
+            yield f"\n\n**FROM DEFAULT HANDLER ({node_name})** \n\n" + str(chunk)
 
 
 class StreamManager:

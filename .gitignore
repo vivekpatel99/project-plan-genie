@@ -214,3 +214,7 @@ tests.md
 frontend/test_messages.py
 .langchain.db
 exp/
+frontend/test_input.py
+.gitignore
+frontend/test_subgraph.py
+frontend/test.json

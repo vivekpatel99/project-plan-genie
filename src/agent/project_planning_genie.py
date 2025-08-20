@@ -56,23 +56,23 @@ supervisor_builder.add_node("supervisor_tool", supervisor_tool, cache_policy=Cac
 supervisor_builder.add_edge(START, "supervisor")
 supervisor_subgraph = supervisor_builder.compile()
 
-agent_builder = StateGraph(
+builder = StateGraph(
     AgentState,
     input_schema=AgentInputState,
     context_schema=Configuration,
 )
 
-agent_builder.add_node("clarify_with_user", clarify_with_user)
-agent_builder.add_node("write_research_brief", write_research_brief)
-agent_builder.add_node("supervisor_subgraph", supervisor_subgraph)
-agent_builder.add_node("final_report_graph", final_report_graph)
+builder.add_node("clarify_with_user", clarify_with_user)
+builder.add_node("write_research_brief", write_research_brief)
+builder.add_node("supervisor_subgraph", supervisor_subgraph)
+builder.add_node("final_report_graph", final_report_graph)
 
 
-agent_builder.add_edge(START, "clarify_with_user")
-agent_builder.add_edge("write_research_brief", "supervisor_subgraph")
-agent_builder.add_edge(
+builder.add_edge(START, "clarify_with_user")
+builder.add_edge("write_research_brief", "supervisor_subgraph")
+builder.add_edge(
     "supervisor_subgraph",
     "final_report_graph",
 )
 logger.info("Compiling Project Planning Genie...")
-project_planning_genie_graph = agent_builder.compile(name="Project Planning Genie")
+project_planning_genie_graph = builder.compile(name="Project Planning Genie")

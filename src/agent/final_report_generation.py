@@ -129,7 +129,7 @@ async def tool_manager(state: ReportGeneratorState, config: RunnableConfig) -> d
         "model": config.mcp_tool_manager_model,
         "max_tokens": config.mcp_tool_manager_max_tokens,
     }
-    logger.info("Configuration for tool manager: {}", config)
+    logger.info("Configuration for tool manager: {}", mcp_tool_manager_config)
 
     max_retries: int = 3
     current_retry: int = 0
@@ -177,6 +177,7 @@ async def tool_loop_guard_node(
     config: RunnableConfig,
 ) -> Command[Literal["mcp_tool_call", "__end__"]]:
     """Checks for tool calls and handles loops before executing them."""
+    config = Configuration.from_runnable_config(config)
     # You can configure this threshold
     config.mcp_tool_repetition_threshold = 2
 
@@ -184,6 +185,7 @@ async def tool_loop_guard_node(
     last_message = state["tool_manager_messages"][-1]
 
     if not hasattr(last_message, "tool_calls") or not last_message.tool_calls:
+        logger.info("No tool calls found, going to __end__")
         # No tool calls, maybe end or move to another state
         return Command(goto=END)
 
@@ -194,6 +196,7 @@ async def tool_loop_guard_node(
     for tool_call in last_message.tool_calls:
         # Create a unique signature for the tool call.
         # Using a sorted JSON string of args ensures consistency.
+        logger.info("Tool call detected: {}", tool_call)
         try:
             args_str = json.dumps(tool_call["args"], sort_keys=True)
             call_signature = f"{tool_call['name']}:{args_str}"
