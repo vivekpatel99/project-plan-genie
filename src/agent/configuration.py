@@ -35,8 +35,8 @@ class Defaults(Enum):
     COMPRESSION_MODEL: str = LOCAL_QWEN3_8B
     RESEARCH_MODEL: str = LOCAL_QWEN3_8B
     SUMMARIZATION_MODEL: str = LOCAL_QWEN3_8B
-    FINAL_REPORT_GENERATION_MODEL: str = LOCAL_GPT_OSS
-    MCP_TOOL_MANAGER_MODEL: str = LOCAL_GPT_OSS
+    FINAL_REPORT_GENERATION_MODEL: str = LOCAL_QWEN3_8B
+    MCP_TOOL_MANAGER_MODEL: str = LOCAL_QWEN2_5_14B
 
     SEARCH_API: SearchAPI = SearchAPI.TAVILY
 
@@ -265,6 +265,16 @@ class Configuration(BaseModel):
                 "type": "number",
                 "default": 10_000,
                 "description": "Maximum output tokens for MCP tool manager model",
+            },
+        },
+    )
+    mcp_tool_repetition_threshold: int = Field(
+        default=2,
+        metadata={
+            "x_oap_ui_config": {
+                "type": "number",
+                "default": 2,
+                "description": "Maximum output tokens for compression model",
             },
         },
     )

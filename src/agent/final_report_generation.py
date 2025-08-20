@@ -1,4 +1,5 @@
 import asyncio
+import json
 from typing import Literal
 
 from langchain.chat_models import init_chat_model
@@ -11,14 +12,14 @@ from loguru import logger
 
 try:
     from .configuration import Configuration
-    from .mcp_tool_service import MCPToolService
+    from .my_mcps.mcp_tool_service import MCPToolService
     from .prompts import SYSTEM_PROMPT_PROJECT_PLAN_STRUCTURE, TOOL_MANAGER_PROMPT
     from .states import ReportGeneratorState, StatesKeys
     from .utils import execute_tool_safely, get_today_str
 except ImportError:
     # rootutils.setup_root(__file__, indicator=".git", pythonpath=True)
     from src.agent.configuration import Configuration
-    from src.agent.mcp_tool_service import MCPToolService
+    from src.agent.my_mcps.mcp_tool_service import MCPToolService
     from src.agent.prompts import SYSTEM_PROMPT_PROJECT_PLAN_STRUCTURE, TOOL_MANAGER_PROMPT
     from src.agent.states import ReportGeneratorState, StatesKeys
     from src.agent.utils import execute_tool_safely, get_today_str
@@ -171,6 +172,55 @@ async def tool_manager(state: ReportGeneratorState, config: RunnableConfig) -> d
     )
 
 
+async def tool_loop_guard_node(
+    state: ReportGeneratorState,
+    config: RunnableConfig,
+) -> Command[Literal["mcp_tool_call", "__end__"]]:
+    """Checks for tool calls and handles loops before executing them."""
+    # You can configure this threshold
+    config.mcp_tool_repetition_threshold = 2
+
+    # Get the latest message which should contain tool calls
+    last_message = state["tool_manager_messages"][-1]
+
+    if not hasattr(last_message, "tool_calls") or not last_message.tool_calls:
+        # No tool calls, maybe end or move to another state
+        return Command(goto=END)
+
+    # Get the current tool call tracker
+    tracker = state.get("tool_call_tracker", {})
+
+    # Check each tool call
+    for tool_call in last_message.tool_calls:
+        # Create a unique signature for the tool call.
+        # Using a sorted JSON string of args ensures consistency.
+        try:
+            args_str = json.dumps(tool_call["args"], sort_keys=True)
+            call_signature = f"{tool_call['name']}:{args_str}"
+        except TypeError:
+            # Handle non-serializable args if necessary
+            call_signature = f"{tool_call['name']}:{tool_call['args']!s}"
+
+        # Check if we've seen this call before
+        call_count = tracker.get(call_signature, 0)
+
+        if call_count >= config.mcp_tool_repetition_threshold:
+            logger.warning(f"Repetitive tool call detected: {call_signature}. Exiting graph.")
+            # You could also return a ToolMessage with an error to the LLM
+            # to give it a chance to recover, instead of exiting.
+            return Command(goto=END)
+
+        # Update the tracker for the next iteration
+        tracker[call_signature] = call_count + 1
+
+    # If no loops are detected, proceed with tool execution.
+    # This would typically be another node in your graph.
+    return Command(
+        goto="mcp_tool_call",
+        update={StatesKeys.TOOL_CALL_TRACKER.value: tracker},
+    )
+
+
 @logger.catch
 async def mcp_tool_call(state: ReportGeneratorState, config: RunnableConfig) -> Command[Literal["tool_manager"]]:
     """Call this tool to indicate that the Report generation is successfully completed."""
@@ -180,7 +230,6 @@ async def mcp_tool_call(state: ReportGeneratorState, config: RunnableConfig) -> 
     messages = state.get(StatesKeys.TOOL_MANAGER_MESSAGES.value, [])
     config = Configuration.from_runnable_config(config)
 
-    # tools = state["mcp_tools"]
     _, tools_by_name = await mcp_tool_service.get_tools()
 
     last_message = messages[-1]
@@ -209,7 +258,9 @@ async def mcp_tool_call(state: ReportGeneratorState, config: RunnableConfig) -> 
     )
 
 
-async def should_continue(state: ReportGeneratorState) -> Literal["human_tool_review_node", "mcp_tool_call", "__end__"]:
+async def should_continue(
+    state: ReportGeneratorState,
+) -> Literal["human_tool_review_node", "tool_loop_guard_node", "__end__"]:
     logger.info("[INFO] Checking if we should continue...")
     messages = state.get(StatesKeys.TOOL_MANAGER_MESSAGES.value, [])
 
@@ -220,8 +271,8 @@ async def should_continue(state: ReportGeneratorState) -> Literal["human_tool_re
             logger.info("Going to human_tool_review_node: last_message.tool_calls: ")
             return "human_tool_review_node"
 
-        logger.info("Directly going to mcp_tool_call because tool calls are not protected")
-        return "mcp_tool_call"
+        logger.info("Directly going to tool_loop_guard_node because tool calls are not protected")
+        return "tool_loop_guard_node"
 
     print("[INFO] No tool calls found, going to __end__")
     return "__end__"
@@ -229,7 +280,7 @@ async def should_continue(state: ReportGeneratorState) -> Literal["human_tool_re
 
 async def human_tool_review_node(
     state: ReportGeneratorState,
-) -> Command[Literal["mcp_tool_call", "tool_manager"]]:
+) -> Command[Literal["tool_loop_guard_node", "tool_manager"]]:
     """Node is a placeholder for the human to review the final report generation process to verify proper tool call checks before tools are called by the agent."""
     print("[INFO] human_tool_review_node called")
     last_message = state[StatesKeys.TOOL_MANAGER_MESSAGES.value][-1]
@@ -244,7 +295,7 @@ async def human_tool_review_node(
     # Stop graph execution and wait for human input
     human_review: dict = interrupt(
         {
-            "message": r"Your input is required for the following tool and your response must be in json format such as {'action': 'accept'} or {'feedback':'wrong toll call'}",
+            "message": "Your input is required for the following tool and your response must be 'accept' to accept tool request or write a feedback, e.g 'wrong toll call'",
             "tool_calls": tool_calls,
         },
     )
@@ -252,7 +303,7 @@ async def human_tool_review_node(
 
     if review_action == "accept":
         return Command(
-            goto="mcp_tool_call",
+            goto="tool_loop_guard_node",
         )
 
     human_feedback = human_review.get("feedback")
@@ -282,6 +333,7 @@ builder = StateGraph(ReportGeneratorState, config_schema=Configuration)
 builder.add_node("final_report_generation", final_report_generation, cache_policy=CachePolicy())
 builder.add_node("human_tool_review_node", human_tool_review_node)
 builder.add_node("tool_manager", tool_manager)  # , cache_policy=CachePolicy())
+builder.add_node("tool_loop_guard_node", tool_loop_guard_node)  # , cache_policy=CachePolicy())
 builder.add_node("mcp_tool_call", mcp_tool_call)
 
 builder.add_edge(START, "final_report_generation")
@@ -290,7 +342,7 @@ builder.add_conditional_edges(
     should_continue,
     {
         "human_tool_review_node": "human_tool_review_node",
-        "mcp_tool_call": "mcp_tool_call",
+        "tool_loop_guard_node": "tool_loop_guard_node",
         "__end__": END,
     },
 )

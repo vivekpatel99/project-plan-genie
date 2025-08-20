@@ -65,13 +65,12 @@ class StreamRouter:
         async for result in handler.handle(chunk, node_name):
             yield result
 
+    class DefaultHandler(NodeHandler):
+        """Default handler for unhandled nodes."""
 
-class DefaultHandler(NodeHandler):
-    """Default handler for unhandled nodes."""
-
-    async def handle(self, chunk: dict[str, Any], node_name: str) -> AsyncIterator[str]:
-        logger.warning(f"No specific handler for node '{node_name}'. Using default handler.")
-        yield f"**FROM DEFAULT HANDLER ({node_name})** \n\n" + str(chunk)
+        async def handle(self, chunk: dict[str, Any], node_name: str) -> AsyncIterator[str]:
+            logger.warning(f"No specific handler for node '{node_name}'. Using default handler.")
+            yield f"**FROM DEFAULT HANDLER ({node_name})** \n\n" + str(chunk)
 
 
 class StreamManager:

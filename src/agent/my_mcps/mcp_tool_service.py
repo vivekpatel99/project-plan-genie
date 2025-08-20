@@ -1,8 +1,9 @@
 import rootutils
 from langchain_mcp_adapters.client import MultiServerMCPClient
+from loguru import logger
 
 try:
-    from .my_mcps import mcp_config
+    from . import mcp_config
 
 except ImportError:
     rootutils.setup_root(__file__, indicator=".git", pythonpath=True)
@@ -23,15 +24,18 @@ class MCPToolService:
         """
         if cls._instance is None:
             cls._instance = super().__new__(cls)
+        logger.info("MCPToolService instance created.")
         return cls._instance
 
     async def get_tools(self):
         """Get tools, using cache if available."""
         if self._tools_cache is None:
+            logger.info("Fetching tools from MCP...")
             await self._fetch_tools()
+        logger.info("Tools fetched from MCP.")
         return self._tools_cache, self._tools_by_name_cache
 
-    async def _fetch_tools(self):
+    async def _fetch_tools(self) -> None:
         """Fetch tools from MCP and cache them."""
         client = MultiServerMCPClient(connections=mcp_config["mcpServers"])
         tools = await client.get_tools()

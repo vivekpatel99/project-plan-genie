@@ -27,6 +27,7 @@ class StatesKeys(str, Enum):
     TOOL_MANAGER_MESSAGES = "tool_manager_messages"
     MCP_TOOLS = "mcp_tools"
     MCP_TOOLS_BY_NAME = "mcp_tools_by_name"
+    TOOL_CALL_TRACKER = "tool_call_tracker"
 
 
 # --- Clarification Agent ------------------------------------------------------------------
@@ -54,6 +55,8 @@ class ReportGeneratorState(TypedDict):
     mcp_tools: list[dict]
     mcp_tools_by_name: dict[str, dict]
     tool_manager_messages: Annotated[list[MessageLikeRepresentation], add_messages]
+    # Tracks the number of times each unique tool call has been made to prevent loops.
+    tool_call_tracker: dict[str, int]
 
 
 class Summary(BaseModel):

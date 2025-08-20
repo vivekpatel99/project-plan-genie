@@ -3,21 +3,38 @@
 import rootutils
 import streamlit as st
 from langchain_community.cache import SQLiteCache
-from langchain_core.caches import InMemoryCache
 from langchain_core.globals import set_llm_cache
-from langchain_core.messages import HumanMessage
+from langgraph.cache.memory import InMemoryCache
 from langgraph.checkpoint.memory import MemorySaver
+from langgraph.graph.state import CompiledStateGraph
 from langgraph.types import Command
 
 rootutils.setup_root(__file__, indicator=".git", pythonpath=True)
 
 from frontend.utils import (  # noqa: E402
+    final_report_generation_input,
     setup_logging,
     stream_graph_responses_test,
 )
-from src.agent.project_planning_genie import agent_builder  # noqa: E402
+
+# from src.agent.project_planning_genie import agent_builder
+from src.agent.final_report_generation import builder  # noqa: E402
+from src.agent.states import ReportGeneratorState  # noqa: E402
 
 # from src.agent.clarification_agent_subgraph import clarify_builder
+
+
+@st.cache_resource
+def get_graph() -> CompiledStateGraph:
+    """Load and compile the graph, caching it for reuse."""
+    checkpointer = MemorySaver()
+    graph = builder.compile(
+        name="Test Final Report Generation",
+        checkpointer=checkpointer,
+        cache=InMemoryCache(),
+    )
+    return graph
+
 
 # ──────────────────────────────────────────────────────────────
 # 1.  Page & persistent state
@@ -46,25 +63,35 @@ setup_logging()
 
 configurable = {"configurable": {"thread_id": "1"}}
 
+graph = get_graph()
+test_input = ReportGeneratorState(
+    research_brief=final_report_generation_input["research_brief"],
+    raw_notes=final_report_generation_input["raw_notes"],
+    notes=final_report_generation_input["notes"],
+    # The final_report is an output field, so we initialize it as empty.
+    final_report="",
+    # The tool manager parts are also needed for the final_report_graph state.
+    tool_manager_messages=[],
+    mcp_tools=[],
+    mcp_tools_by_name={},
+    tool_call_tracker={},
+)
+
 # ──────────────────────────────────────────────────────────────
 # 4.  Normal chat flow (only if no pending interrupt)
 # ──────────────────────────────────────────────────────────────
-graph = agent_builder.compile(
-    name="Project Planning Genie Local",
-    checkpointer=MemorySaver(),
-    cache=InMemoryCache(),
-)
+
 if not st.session_state.pending_interrupt and (prompt := st.chat_input("Please write a detailed project description")):
     # save & echo user message
-    st.session_state.messages.append({"role": "user", "content": prompt})
+    st.session_state.messages.append({"role": "user", "content": test_input})
     with st.chat_message("user"):
-        st.markdown(prompt)
+        st.markdown(test_input)
 
     # run graph
     with st.chat_message("assistant", avatar="🧞‍♀️"):
         ai_msg = st.write_stream(
             stream_graph_responses_test(
-                user_input={"messages": [HumanMessage(content=prompt)]},
+                user_input=test_input,
                 graph=graph,
                 config=configurable,
             ),
