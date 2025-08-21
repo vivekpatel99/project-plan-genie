@@ -61,7 +61,6 @@ async def clarify_with_user(
     """
     logger.info("Clarifying with user...")
     config = Configuration.from_runnable_config(config)
-    logger.debug("Configuration for clarification: {}", config)
     if not config.allow_clarification:
         return Command(goto="write_research_brief")
 
@@ -125,11 +124,11 @@ async def write_research_brief(
     """Create the research brief from previous conversations to prepare for research."""
     logger.info("Writing research brief...")
     config = Configuration.from_runnable_config(config)
-    logger.debug("Configuration for writing research brief: {}", config)
     research_model_config = {
         "model": config.research_model,
         "max_tokens": config.research_model_max_tokens,
     }
+    logger.debug("Configuration for writing research brief: {}", research_model_config)
     research_model = (
         clarification_model.with_structured_output(ResearchQuestion)
         .with_retry(stop_after_attempt=config.max_structured_output_retries)

@@ -2,14 +2,14 @@
 
 import rootutils
 import streamlit as st
-from langchain_community.cache import SQLiteCache
-from langchain_core.globals import set_llm_cache
 from langchain_core.messages import HumanMessage
+from langgraph.cache.memory import InMemoryCache
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.types import Command
 
 rootutils.setup_root(__file__, indicator=".git", pythonpath=True)
+
 
 from frontend.utils import (  # noqa: E402
     setup_logging,
@@ -19,23 +19,21 @@ from src.agent.project_planning_genie import builder  # noqa: E402
 
 # from src.agent.final_report_generation import builder
 
-# from src.agent.clarification_agent_subgraph import clarify_builder
 
-
-@st.cache_resource
+@st.cache_resource  # use cache to store the graph after rebuild from interrupt
 def get_graph() -> CompiledStateGraph:
     """Load and compile the graph, caching it for reuse."""
     checkpointer = MemorySaver()
     graph = builder.compile(
         name="Test Project Planning Genie",
         checkpointer=checkpointer,
-        # cache=InMemoryCache(),
+        cache=InMemoryCache(),
     )
     return graph
 
 
 # ──────────────────────────────────────────────────────────────
-# 1.  Page & persistent state
+# Page & persistent state
 # ──────────────────────────────────────────────────────────────
 st.title("Project Planning Genie 🧞‍♀️")
 
@@ -47,16 +45,16 @@ if "pending_interrupt" not in st.session_state:
     st.session_state.interrupt_snapshot = None  # stores ThreadState obj
 
 # ──────────────────────────────────────────────────────────────
-# 2.  Re-display chat history
+# Re-display chat history
 # ──────────────────────────────────────────────────────────────
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
 # ──────────────────────────────────────────────────────────────
-# 3.  Build / load graph
+# Build / load graph
 # ──────────────────────────────────────────────────────────────
-set_llm_cache(SQLiteCache(database_path=".langchain.db"))
+# set_llm_cache(SQLiteCache(database_path=".langchain.db"))
 setup_logging()
 
 configurable = {"configurable": {"thread_id": "1"}}
@@ -78,8 +76,8 @@ graph = get_graph()
 test_input = """ Develop an agent-powered AI note-taking app using LangGraph, designed for personal productivity and as a demonstration of your skills in computer vision, multi-agent systems, and end-to-end AI engineering. The app will facilitate capturing handwritten notes, automatically formatting them (including complex content like equations and diagrams), classifying content into the correct Notion section, and uploading the processed notes with rich formatting. The goal is to implement a Minimum Viable Product (MVP) capable of image-to-text conversion and formatting within two weeks.
  """
 
-# ──────────1────────────────────────────────────────────────────
-# 4.  Normal chat flow (only if no pending interrupt)
+# ──────────────────────────────────────────────────────────────
+# Normal chat flow (only if no pending interrupt)
 # ──────────────────────────────────────────────────────────────
 if not st.session_state.pending_interrupt and (prompt := st.chat_input("Please write a detailed project description")):
     # save & echo user message
@@ -99,7 +97,7 @@ if not st.session_state.pending_interrupt and (prompt := st.chat_input("Please w
     st.session_state.messages.append({"role": "assistant", "content": ai_msg})
 
 # ──────────────────────────────────────────────────────────────
-# 5.  Detect new interrupt *once*
+# Detect new interrupt *once*
 # ──────────────────────────────────────────────────────────────
 if not st.session_state.pending_interrupt:  # only check when free
     ts = graph.get_state(configurable)
@@ -108,7 +106,7 @@ if not st.session_state.pending_interrupt:  # only check when free
         st.session_state.interrupt_snapshot = ts  # keep for display
 
 # ──────────────────────────────────────────────────────────────
-# 6.  Show interrupt approval UI (survives reruns)
+# Show interrupt approval UI (survives reruns)
 # ──────────────────────────────────────────────────────────────
 if st.session_state.pending_interrupt:
     ts = st.session_state.interrupt_snapshot

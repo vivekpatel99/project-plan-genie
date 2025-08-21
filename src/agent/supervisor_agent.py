@@ -27,7 +27,7 @@ except ImportError:
     from src.agent.utils import get_notes_from_tool_calls, is_token_limit_exceeded
 
 # Initialize a configurable model that we will use throughout the agent
-supervisor_model = init_chat_model(
+supervisor_model_shell = init_chat_model(
     configurable_fields=("model", "max_tokens", "api_key"),
 )
 
@@ -49,22 +49,22 @@ async def supervisor(state: SupervisorState, config: RunnableConfig) -> Command[
     logger.info("Supervisor agent invoked.")
     config = Configuration.from_runnable_config(config)
     logger.debug("Configuration for supervisor: {}", config)
-    research_model_config = {
-        "model": config.research_model,
-        "max_tokens": config.research_model_max_tokens,
+    supervisor_model_config = {
+        "model": config.supervisor_model,
+        "max_tokens": config.supervisor_model_max_tokens,
     }
-    logger.debug("Model configuration for supervisor: {}", research_model_config)
+    logger.debug("Model configuration for supervisor: {}", supervisor_model_config)
 
     lead_research_tool = [ConductResearch, ResearchComplete]
-    research_model = (
-        supervisor_model.bind_tools(lead_research_tool)
+    supervisor_model = (
+        supervisor_model_shell.bind_tools(lead_research_tool)
         .with_retry(stop_after_attempt=config.max_structured_output_retries)
         .with_config(
-            research_model_config,
+            supervisor_model_config,
         )
     )
     supervisor_message = state.get(StatesKeys.SUPERVISOR_MSGS.value, [])
-    response = await research_model.ainvoke(supervisor_message)
+    response = await supervisor_model.ainvoke(supervisor_message)
     logger.debug("Supervisor response: {}", response)
     logger.info("going to supervisor_tool")
     return Command(
@@ -179,7 +179,7 @@ async def supervisor_tool(state: SupervisorState, config: RunnableConfig) -> Com
             },
         )
     except Exception as e:
-        if is_token_limit_exceeded(e, configurable.research_model):
+        if is_token_limit_exceeded(e, configurable.supervisor_model):
             logger.error(f"Token limit exceeded while reflecting: {e}")
         else:
             logger.error(f"Other error in reflection phase: {e}")

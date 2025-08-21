@@ -12,6 +12,7 @@ from abc import ABC, abstractmethod
 from collections.abc import AsyncIterator
 from typing import Any
 
+from langchain_core.messages import get_buffer_string
 from loguru import logger
 
 from src.agent.states import StatesKeys
@@ -139,15 +140,17 @@ class SupervisorSubgraphHandler(NodeHandler):
         msg = chunk.get(node_name)
         if not msg:
             return
-
-        last_msg = msg.get(self.states_keys.SUPERVISOR_MSGS.value, [{}])[-1]
+        last_msg = msg.get(self.states_keys.SUPERVISOR_MSGS.value, [])[-1]
+        supervisor_msgs = get_buffer_string(msg[self.states_keys.SUPERVISOR_MSGS.value][1:])  # removing system message
         additional_kwargs = getattr(last_msg, "additional_kwargs", {})
         function_call = additional_kwargs.get("function_call")
         formatted_string = ""
         if function_call:
             formatted_string = "\n".join(f"{key.capitalize()}: {value}" for key, value in function_call.items())
+            yield f"\n\n **{node_name}**: \n{formatted_string}"
 
-        yield f"\n\n **{node_name}**: \n{formatted_string}"
+        if not formatted_string:  # If no function call, use the last message
+            yield f"\n\n **{node_name}**: \n{supervisor_msgs}"
 
 
 class FinalReportGenerationHandler(BaseFormattingHandler):

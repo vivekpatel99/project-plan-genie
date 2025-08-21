@@ -33,6 +33,7 @@ class Defaults(Enum):
     # Only For Testing
     CLARIFICATION_MODEL: str = LOCAL_QWEN3_8B
     COMPRESSION_MODEL: str = LOCAL_QWEN3_8B
+    SUPERVISOR_MODEL: str = LOCAL_QWEN3_8B
     RESEARCH_MODEL: str = LOCAL_QWEN3_8B
     SUMMARIZATION_MODEL: str = LOCAL_QWEN3_8B
     FINAL_REPORT_GENERATION_MODEL: str = LOCAL_GPT_OSS
@@ -75,13 +76,34 @@ class Configuration(BaseModel):
             },
         },
     )
+    # --- SUPERVISOR Model --------------------------------------------------------------------------
+    supervisor_model: str = Field(
+        default=Defaults.SUPERVISOR_MODEL.value,
+        metadata={
+            "x_oap_ui_config": {
+                "type": "text",
+                "default": Defaults.SUPERVISOR_MODEL.value,
+                "description": "Model for conducting research. NOTE: Make sure your Researcher Model supports the selected search API.",
+            },
+        },
+    )
+    supervisor_model_max_tokens: int = Field(
+        default=10_000,
+        metadata={
+            "x_oap_ui_config": {
+                "type": "number",
+                "default": 10_000,
+                "description": "Maximum output tokens for research model",
+            },
+        },
+    )
     # --- Research Model --------------------------------------------------------------------------
     research_model: str = Field(
         default=Defaults.RESEARCH_MODEL.value,
         metadata={
             "x_oap_ui_config": {
                 "type": "text",
-                "default": "openai:gpt-4.1",
+                "default": Defaults.RESEARCH_MODEL.value,
                 "description": "Model for conducting research. NOTE: Make sure your Researcher Model supports the selected search API.",
             },
         },
